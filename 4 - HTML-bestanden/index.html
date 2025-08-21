@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <!-- Voor didactisch gebruik aangepast door Robbe Wulgaert, Sint-Lievenscollege Gent. Niet verspreiden zonder naamsvermelding -->
+  <!-- robbewulgaert.be -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Slimme Vuilnisbak!</title>
+  <meta name="theme-color" content="#5200FF" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,900&display=swap" rel="stylesheet" />
+
+  <!-- Externe CSS-bestand -->
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Inline favicon (één regel, correct URL-gecodeerd) -->
+  <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20x='10'%20y='12'%20width='44'%20height='40'%20rx='6'%20ry='6'%20fill='%235200FF'/%3E%3Crect%20x='18'%20y='8'%20width='28'%20height='8'%20rx='4'%20ry='4'%20fill='%233dffd0'/%3E%3Cpath%20d='M24%2020v24M32%2020v24M40%2020v24'%20stroke='%23ffffff'%20stroke-width='4'%20stroke-linecap='round'/%3E%3C/svg%3E" />
+
+  <!-- ===== Merkthema + donker modus + kleine UI-hulstijlen ===== -->
+  <style>
+    :root{
+      /* Merk */
+      --primary:#5200FF;
+      --secondary:#3dffd0;
+
+      /* Thema (licht) */
+      --bg:#F9F8FC;
+      --text:#110C1D;
+      --surface:#ffffff;
+      --border:#d6cdea;
+
+      /* Datavis / labels */
+      --chart-grid:#cfcbdc;
+      --chart-label:#110C1D;
+    }
+    body.dark{
+      --bg:#161820;
+      --text:#ffffff;
+      --surface:#23272e;
+      --border:#3a3f4a;
+
+      --chart-grid:#3a3f4a;
+      --chart-label:#e7e7e7;
+    }
+
+    html,body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:'Roboto', system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+      margin:0;
+    }
+
+    /* Algemene badges/knoppen/overlays (los van bestaande mock-up CSS) */
+    .statusbar{ display:flex; gap:.5rem; flex-wrap:wrap; margin:.5rem 0; }
+    .badge{
+      display:inline-block; padding:.25rem .6rem; border-radius:9999px;
+      border:1px solid var(--border); font-size:.9rem;
+    }
+    .badge-on { color:#1e7f33; border-color:#1e7f33; }
+    .badge-off{ color:#a33;    border-color:#a33;    }
+
+    .actions{ display:flex; gap:.5rem; margin:.5rem 0 0; }
+    .btn-pill{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:40px; height:40px; padding:0 .8rem; border-radius:9999px;
+      background:var(--surface); color:var(--text); border:1px solid var(--border);
+      box-shadow:0 6px 16px rgba(0,0,0,.15); cursor:pointer;
+    }
+    .btn-pill:focus-visible{ outline:3px solid var(--secondary); outline-offset:2px; }
+
+    .overlay.hidden, .privacy.hidden{ display:none; }
+    .overlay{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.7); z-index:1000; padding:1rem;
+    }
+    .overlay-card{
+      position:relative;
+      background:var(--surface); color:var(--text);
+      border:1px solid var(--border); border-radius:16px;
+      padding:1.25rem 1.5rem; max-width:720px; width:min(92vw,720px);
+    }
+    .overlay-close{
+      position:absolute; right:.75rem; top:.5rem; background:transparent; border:0; cursor:pointer;
+      color:var(--text); font-size:1.2rem;
+    }
+
+    .privacy{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.85); color:#fff; z-index:1100; text-align:center; padding:1rem;
+    }
+    .privacy p{ font-size:1.1rem; margin:0; }
+
+    /* Kleine layout-verbeteraars voor AIapp */
+    .AIapp{
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      margin:10px;
+      box-shadow:0 8px 24px rgba(0,0,0,.1);
+    }
+    .AIapp h1{ margin:.2rem 0 .6rem; }
+
+    /* Uitlegvakje – laat tekst thema volgen */
+    .uitleg{
+      background:var(--surface);
+      color:var(--text);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px;
+      margin:16px auto;
+      max-width:880px;
+      box-shadow:0 8px 24px rgba(0,0,0,.08);
+    }
+
+    /* Footer */
+    footer{ text-align:center; padding:12px 8px; }
+    footer small{ opacity:.8; color:var(--text); }
+    /* NL: Laat lijst er uitzien als H2-koppen */
+#class-list{
+  /* Verwijder standaard bullets/inspringing */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#class-list li{
+  /* Stijl = ongeveer H2 */
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 10px 0;
+  color: var(--text);            /* volgt licht/donker thema */
+  letter-spacing: .2px;
+}
+
+/* Optioneel subtiele onderstreping zoals koppen */
+#class-list li + li{
+  margin-top: 14px;
+  border-top: 0px solid var(--border);
+  padding-top: 14px;
+}
+
+/* Op kleine schermen iets kleiner */
+@media (max-width: 640px){
+  #class-list li{ font-size: 28px; }
+}
+
+  </style>
+    
+</head>
+
+<body>
+  <main id="app">
+    <div class="logoSLC" aria-hidden="true">
+      <!-- Voor didactisch gebruik aangepast door Robbe Wulgaert, Sint-Lievenscollege Gent. Niet verspreiden zonder naamsvermelding -->
+      <!-- robbewulgaert.be -->
+    </div>
+
+    <!-- ===== iPhone-mock-up blijft zoals je had ===== -->
+    <div class="container">
+      <div class="iphone">
+        <div class="buttons">
+          <div class="silent"></div>
+          <div class="sleep"></div>
+          <div class="vol-up"></div>
+          <div class="vol-down"></div>
+        </div>
+        <div class="top">
+          <div class="black-bar"></div>
+          <div class="iphone-top"></div>
+        </div>
+        <div class="components">
+          <div class="speaker"></div>
+          <div class="camera">
+            <div class="shine-left"></div>
+            <div class="shine-right"></div>
+          </div>
+        </div>
+        <div class="top-bar"></div>
+        <div class="bottom-bar"></div>
+
+        <div class="screen">
+          <!-- Video (decor) -->
+          <video loop autoplay muted playsinline>
+            <source src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1116884/iphone-vid.mp4" type="video/mp4" />
+          </video>
+
+          <!-- ===== Jouw AI-appgebied ===== -->
+          <div class="AIapp">
+            <h1 id="app-title"><b>Slimme Vuilnisbak</b></h1>
+
+            <!-- Hier plaatst p5.js het canvas (rol img zodat aria-label geldig is) -->
+            <div id="canvasContainer" role="img" aria-label="Live camerabeeld"></div>
+
+            <!-- Inferentie-labels -->
+            <div id="labelContainer" aria-live="polite">
+              <p id="resultLabel">—</p>
+              <p id="confidenceLabel">—</p>
+            </div>
+
+            <!-- Status-badges -->
+            <div id="statusbar" class="statusbar">
+              <span id="st-model"  class="badge badge-off">Model: niet geladen</span>
+              <span id="st-camera" class="badge badge-off">Camera: niet actief</span>
+              <span id="st-serial" class="badge badge-off">Serieel: niet verbonden</span>
+            </div>
+
+            <!-- Acties: thema / help / privacy -->
+            <div class="actions">
+              <button id="btn-theme"   class="btn-pill" aria-pressed="false" aria-label="Wissel thema" title="Wissel thema">🌙</button>
+              <button id="btn-help"    class="btn-pill" aria-label="Toon uitleg"    title="Toon uitleg">?</button>
+              <button id="btn-privacy" class="btn-pill" aria-pressed="false" aria-label="Privacy-modus (pauzeer)" title="Privacy-modus (pauzeer)">🛑</button>
+            </div>
+          </div>
+
+          <!-- Statusbalkjes van de mock-up laten we ongemoeid -->
+          <div class="service">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          </div>
+          <div class="battery">
+            <div class="nub"></div>
+            <div class="energy"></div>
+          </div>
+          <div class="lock-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goo-filter voor notch-effect -->
+    <svg viewBox="0 0 0 0" height="0" width="0" aria-hidden="true">
+      <filter id="goo" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"></feGaussianBlur>
+        <feColorMatrix in="blur" mode="matrix"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 8 -1" result="cm"></feColorMatrix>
+        <feBlend in="SourceGraphic" in2="cm"></feBlend>
+      </filter>
+    </svg>
+
+    <!-- ===== Uitlegblok + verbindknop ===== -->
+    <div class="uitleg">
+      <h1 id="uitleg-title">Slimme Vuilnisbak</h1>
+
+      <!-- Verbindknop – logica in sketch.js -->
+      <button id="connectButton">Verbind met microcontroller</button>
+
+<ul id="class-list">
+  <li>Biologisch</li>
+  <li>Plastic</li>
+  <li>Metaal</li>
+  <li>Papier</li>
+  <li>Hello, human!</li>
+</ul>
+
+      <p>
+        Dit is een educatief AI-prototype met<br />
+        aangepast materiaal van het Sint-Lievenscollege Gent.<br />
+        Dit werd gemaakt voor educatief gebruik door<br />
+        Robbe Wulgaert (www.robbewulgaert.be)<br />
+        voor zijn vak 'AI &amp; Design Thinking'.<br /><br />
+        Meer info: robbe.wulgaert@sintlievenscollege.be
+      </p>
+    </div>
+
+    <!-- ===== Help-overlay ===== -->
+    <div id="overlay-help" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="overlay-card">
+        <button id="btn-close-help" class="overlay-close" aria-label="Sluit">✕</button>
+        <h2 id="help-title" tabindex="-1">Instructies</h2>
+        <ol>
+          <li>Sta cameratoegang toe in de browser.</li>
+          <li>Wijs de camera naar een object (bv. banaan, fles, blik, papier).</li>
+          <li>Wacht tot het label stabiel is (5-frames meerderheid + drempel).</li>
+          <li>(Optioneel) Klik “Verbind met microcontroller” om servo/LED aan te sturen.</li>
+          <li>Gebruik “Privacy-modus” om camera &amp; AI tijdelijk te pauzeren.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ===== Privacy-masker ===== -->
+    <div id="privacy-mask" class="privacy hidden" aria-live="polite">
+      <p>🔒 Privacy-modus actief – camera en AI gepauzeerd. Druk op de p-knop om deze uit te schakelen.</p>
+    </div>
+  </main>
+
+  <!-- ===== Scripts: p5 + ml5 + UI-helpers + jouw sketch ===== -->
+  <script src="p5.min.js"></script>
+  <script src="ml5.min.js"></script>
+
+  <!-- UI-helpers (thema, badges, help, privacy). Sketch kan deze functies aanroepen. -->
+  <script>
+    /* ===== Thema-besturing (licht standaard) ===== */
+    (function(){
+      const KEY='svb-theme';
+      const btn=document.getElementById('btn-theme');
+
+      function setTheme(t){
+        const dark = t==='dark';
+        document.body.classList.toggle('dark', dark);
+        localStorage.setItem(KEY, t);
+        if(btn){
+          btn.setAttribute('aria-pressed', String(dark));
+          btn.textContent = dark ? '☀️' : '🌙';
+        }
+        console.log('🌓 (Thema) Ingesteld op:', t);
+      }
+      const stored = localStorage.getItem(KEY);
+      const init = (stored==='dark'||stored==='light') ? stored : 'light';
+      setTheme(init);
+      btn?.addEventListener('click', ()=> setTheme(document.body.classList.contains('dark')?'light':'dark'));
+    })();
+
+    /* ===== Help-overlay besturing ===== */
+    (function(){
+      const help  = document.getElementById('overlay-help');
+      const open  = document.getElementById('btn-help');
+      const close = document.getElementById('btn-close-help');
+      function show(){ help.classList.remove('hidden'); console.log('🔎 (Uitleg) Geopend.'); document.getElementById('help-title')?.focus(); }
+      function hide(){ help.classList.add('hidden');    console.log('🔎 (Uitleg) Gesloten.'); open?.focus(); }
+      open?.addEventListener('click', show);
+      close?.addEventListener('click', hide);
+      document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !help.classList.contains('hidden')) hide(); });
+      help?.addEventListener('click', e=>{ if(e.target===help) hide(); });
+    })();
+
+    /* ===== Privacy-modus (persistente toggle + API) =====
+       - Bewaart staat in localStorage (sv_privacy_v1)
+       - Stelt helpers beschikbaar: isPrivacyOn(), setPrivacy(bool)
+       - Dispatcht CustomEvent 'privacychange' met detail=true/false
+       - Synchroniseert knop + overlay en biedt sneltoets 'P'
+    */
+    (function(){
+      const KEY = 'sv_privacy_v1';
+      const mask = document.getElementById('privacy-mask');
+      const btn  = document.getElementById('btn-privacy');
+
+      // NL: beginstand lezen (default = uit)
+      let on = localStorage.getItem(KEY) === '1';
+
+      function apply(){
+        // Overlay tonen/verbergen
+        mask.classList.toggle('hidden', !on);
+
+        // Knop-toestand (icoon, labels, aria-pressed)
+        if (btn) {
+          btn.setAttribute('aria-pressed', String(on));
+          const lblOn  = 'Privacy uit (hervat)';     // als privacy AAN is, wil je UIT zetten
+          const lblOff = 'Privacy-modus (pauzeer)';  // als privacy UIT is, wil je AAN zetten
+          btn.textContent = on ? '▶️' : '🛑';
+          btn.title = on ? lblOn : lblOff;
+          btn.setAttribute('aria-label', on ? lblOn : lblOff);
+        }
+
+        // Event voor de rest van de app (sketch.js luistert hiernaar)
+        document.dispatchEvent(new CustomEvent('privacychange', { detail: on }));
+
+        console.log('🔒 (Privacy) Modus:', on ? 'aan' : 'uit');
+      }
+
+      // Publieke helpers voor andere scripts
+      window.isPrivacyOn = () => on;
+      window.setPrivacy  = (state) => {
+        on = !!state;
+        localStorage.setItem(KEY, on ? '1' : '0');
+        apply();
+      };
+
+      // UI-interactie: knop kliktoggle
+      btn?.addEventListener('click', () => window.setPrivacy(!on));
+
+      // Sneltoets: 'P' om te toggelen
+      document.addEventListener('keydown', (e) => {
+        if ((e.key || '').toLowerCase() === 'p') window.setPrivacy(!on);
+      });
+
+      // Eerste toepassing
+      apply();
+    })();
+
+    /* ===== Status-badges helpers (sketch.js kan deze gebruiken) ===== */
+    (function(){
+      function setBadge(id, on, txtOn, txtOff){
+        const el=document.getElementById(id);
+        if(!el) return;
+        el.textContent = on ? txtOn : txtOff;
+        el.classList.toggle('badge-on', !!on);
+        el.classList.toggle('badge-off', !on);
+      }
+      window.uiSetModel  = (on)=> setBadge('st-model',  !!on, 'Model: geladen', 'Model: niet geladen');
+      window.uiSetCamera = (on)=> setBadge('st-camera', !!on, 'Camera: actief', 'Camera: niet actief');
+      window.uiSetSerial = (on)=> setBadge('st-serial', !!on, 'Serieel: verbonden', 'Serieel: niet verbonden');
+
+      // Labels bijwerken (optioneel te gebruiken)
+      window.uiSetLabels = (label, conf)=>{
+        const r=document.getElementById('resultLabel');
+        const c=document.getElementById('confidenceLabel');
+        if(r) r.textContent = label || '—';
+        if(c) c.textContent = (Number(conf) >= 0) ? (Number(conf)*100).toFixed(0)+'%' : '—';
+      };
+    })();
+  </script>
+
+  <script src="sketch.js"></script>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <small>© 2025 Robbe Wulgaert · AI in de Klas — Hergebruik toegestaan met bronvermelding</small>
+  </footer>
+</body>
+</html>

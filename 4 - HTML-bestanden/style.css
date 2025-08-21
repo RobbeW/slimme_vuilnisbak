@@ -1,0 +1,370 @@
+/* =====Basis – respecteer thema-variabelen uit index.html ===== */
+html {
+  box-sizing: border-box;
+  font-family: "Roboto", system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+}
+
+*, *::after, *::before {
+  box-sizing: inherit;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* achtergrond/tekst volgen het thema (index.html zet :root variabelen) */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== Header/logo ===== */
+.logoSLC {
+  position: absolute;
+  height: 10%;
+  width: 50%;
+}
+
+/* ===== Layout – 50/50 split op groot scherm ===== */
+.container {
+  position: absolute;
+  height: 100%;
+  width: 50%;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.uitleg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  padding: 2rem;
+  text-align: center;
+
+  /* laat paneel meeschakelen met thema */
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+
+/* headings erven kleur uit thema i.p.v. hard zwart */
+.uitleg h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  color: inherit;
+}
+
+.uitleg h2 {
+  font-size: 36px;
+  margin: 10px 0;
+  color: inherit;
+}
+
+.uitleg p {
+  font-size: 20px;
+  color: inherit;
+}
+
+/* ===== IPhone mock-up ===== */
+.iphone {
+  position: relative;
+  height: 875px;
+  width: 423px;
+  padding: 0 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #111;
+  border: 5px solid #3D3D3D;
+  border-radius: 50px;
+  box-shadow:
+    inset 0 0 3px 0 rgba(0, 0, 0, 0.2),
+    0 0 0 1px #999,
+    0 0 30px 0px rgba(0, 0, 0, 0.7);
+  transform: scale(0.6);
+}
+
+.iphone .buttons .silent,
+.iphone .buttons .vol-up,
+.iphone .buttons .vol-down,
+.iphone .buttons .sleep {
+  background: #111;
+  position: absolute;
+  border-radius: 2px;
+}
+
+.iphone .buttons .silent {
+  height: 40px;
+  width: 3px;
+  top: 100px;
+  left: -8px;
+}
+
+.iphone .buttons .vol-up,
+.iphone .buttons .vol-down {
+  left: -8px;
+  height: 60px;
+  width: 4px;
+}
+
+.iphone .buttons .vol-up { top: 170px; }
+.iphone .buttons .vol-down { top: 250px; }
+
+.iphone .buttons .sleep {
+  left: auto;
+  right: -8px;
+  top: 180px;
+  height: 100px;
+  width: 4px;
+  border-radius: 0 2px 2px 0;
+}
+
+.iphone .top {
+  position: absolute;
+  top: 4px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 4;
+  filter: url("#goo");
+}
+
+.iphone .top .black-bar {
+  position: absolute;
+  height: 1px;
+  width: 70%;
+  padding-top: 2px;
+  background: #111;
+}
+
+.iphone .top .iphone-top {
+  position: relative;
+  height: 40px;
+  width: 55%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0 0 20px 20px;
+  background: #111;
+  z-index: 2;
+}
+
+.iphone .components {
+  position: absolute;
+  top: 20px;
+  padding-left: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.iphone .components .speaker {
+  height: 6px;
+  width: 70px;
+  margin: 0 30px;
+  border-radius: 6px;
+  border-bottom: 1px solid #333;
+  background: #222;
+  z-index: 100;
+}
+
+.iphone .components .camera {
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  border-bottom: 1px solid #444;
+  background: radial-gradient(black, #333);
+  opacity: 0.5;
+  z-index: 4;
+}
+
+.iphone .components .camera .shine-left {
+  position: absolute;
+  height: 10px;
+  width: 10px;
+  margin: 2px;
+  border-left: 4px solid dodgerblue;
+  background: black;
+  border-radius: 50%;
+  filter: blur(1.8px);
+}
+.iphone .components .camera .shine-left::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  height: 8px;
+  width: 8px;
+  border-right: 2px solid white;
+  border-radius: 4px;
+}
+
+.iphone .top-bar,
+.iphone .bottom-bar {
+  position: absolute;
+  left: -5px;
+  height: 15px;
+  width: 423px;
+  border-left: 5px solid #111;
+  border-right: 5px solid #111;
+}
+.iphone .top-bar { top: 65px; }
+.iphone .bottom-bar { bottom: 65px; }
+
+.iphone .screen {
+  position: absolute;
+  height: calc(100% - 12px);
+  width: calc(100% - 12px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid rgba(0, 0, 0, 0.9);
+  border-radius: 40px;
+  overflow: hidden;
+}
+
+.iphone .screen video {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* ===== AI-app zone in de mock-up ===== */
+.iphone .AIapp {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+
+  /* aat de kaart meeschakelen met thema */
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.10);
+}
+
+/* Canvas en container */
+#canvasContainer {
+  margin: 0 auto;
+}
+canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+/* ===== Labels – licht/donker compatibel ===== */
+#labelContainer {
+  margin-top: 10px;
+  background-color: rgba(255, 255, 255, 0.85); /* licht thema */
+  padding: 10px;
+  border-radius: 8px;
+  display: inline-block;
+  border: 1px solid var(--border);
+}
+#labelContainer p {
+  color: #000;
+  font-size: 18px;
+  margin: 5px 0;
+}
+/* Donker thema override voor labels */
+body.dark #labelContainer {
+  background-color: rgba(0, 0, 0, 0.55);
+  border-color: var(--border);
+}
+body.dark #labelContainer p {
+  color: #fff;
+}
+
+/* ===== Verbind-knop – branding + donker modus ===== */
+#connectButton {
+  display: inline-block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  font-size: 18px;
+  cursor: pointer;
+  background-color: var(--primary);
+  color: white;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: background .2s, color .2s, border-color .2s, box-shadow .2s;
+}
+#connectButton:hover,
+#connectButton:focus {
+  background-color: #3700b3; /* iets donkerder paars */
+  box-shadow: 0 6px 16px rgba(82,0,255,0.18);
+  outline: none;
+}
+/* Donker: witte knop met paarse tekst/rand */
+body.dark #connectButton {
+  background: #fff;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+body.dark #connectButton:hover,
+body.dark #connectButton:focus {
+  background: var(--secondary);
+  color: #23272e;
+  border-color: var(--secondary);
+}
+
+/* ===== Video styling (duplicaat samengebracht) ===== */
+.iphone .screen video {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* ===== Responsiviteit – stapel onder elkaar op kleine schermen ===== */
+@media screen and (max-width: 1024px) {
+  .container, .uitleg {
+    position: static;       /* uit absolute flow */
+    width: 100%;            /* volle breedte */
+  }
+  .container {
+    height: auto;
+    padding-top: 1rem;
+  }
+  .uitleg {
+    margin: 1rem auto;
+    max-width: 960px;
+  }
+  .iphone {
+    transform: scale(0.6);
+    margin: 0 auto;
+  }
+}
+
+@media screen and (max-height: 500px) {
+  .iphone {
+    transform: scale(0.35);
+  }
+}
+/*  footer (bedekt content) */
+.site-footer {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--surface);
+  color: var(--text);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  padding: 12px 8px;
+  z-index: 10;
+}
+
+/* Ruimte onderaan zodat content niet onder de footer valt */
+body { padding-bottom: 56px; } /* pas hoogte aan indien nodig */
+
