@@ -3,6 +3,9 @@ Teachable Machine + p5.js + ml5.js + WebSerial
 
 Een lokaal, privacyvriendelijk AI-prototype. Je traint een beeldclassificatiemodel (Teachable Machine), de webapp draait lokaal met camera-preview, en stuurt **één seriële code** (één teken + newline) naar een microcontroller (Arduino) om LED’s/servo’s aan te sturen. Inclusief licht/donker thema, statusbadges en privacy-modus.
 Meer achtergrondinformatie kan je vinden via [mijn website](https://www.robbewulgaert.be/onderwijs) en [mijn boek](https://www.robbewulgaert.be/boek) .
+
+[Online demo via deze link](https://robbew.github.io/slimme_vuilnisbak/4%20-%20HTML-bestanden/)
+
 ## Kenmerken
 - Volledig lokaal (alleen een simpele webserver nodig).
 - p5.js + ml5.js voor camera en inference in de browser.
@@ -108,6 +111,7 @@ void loop(){
 ## Licentie en naamsvermelding
 **MIT** — vrij te hergebruiken voor educatie **mits bronvermelding**.  
 © 2025 Robbe Wulgaert – Sint-Lievenscollege Gent / AI in de Klas
+
 
 
 
