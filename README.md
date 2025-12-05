@@ -110,7 +110,8 @@ void loop(){
 
 ## Licentie en naamsvermelding
 **MIT** — vrij te hergebruiken voor educatie **mits bronvermelding**.  
-© 2025 Robbe Wulgaert – Sint-Lievenscollege Gent / AI in de Klas
+© 2025 Robbe Wulgaert – www.robbewulgaert.be / AI in de Klas
+
 
 
 
