@@ -3,8 +3,6 @@
    © 2025 Robbe Wulgaert · AI in de Klas
    =============================================== */
 
-/* ================== GLOBALE TOESTAND ================== */
-
 // TM-model (teachablemachine-image)
 let tmModel = null;
 
@@ -116,7 +114,7 @@ async function initMapping(forceFresh = false) {
       'plastic':    '2',
       'metaal':     '3',
       'papier':     '4',
-      'mens':       'X', 
+      'mens':       'X',
     };
   }
   localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(labelToCode));
@@ -129,7 +127,7 @@ function codeForLabel(lbl) {
   for (const k of Object.keys(labelToCode)) {
     if (key.startsWith(k) || key.includes(k)) return labelToCode[k];
   }
-  return '0'; 
+  return '0';
 }
 
 /* ================== PREFLIGHT STANDAARDMODEL ================== */
@@ -182,7 +180,7 @@ async function setup() {
   document.addEventListener('svCustomConfigChanged', async (e) => {
     const cfg = e.detail || window.svCustomConfig;
     await initModelFromCustomConfig(cfg);
-    await initMapping(true);  
+    await initMapping(true);
   });
 }
 
@@ -194,13 +192,8 @@ function draw() {
   if (video) image(video, 0, 0, width, height);
   pop();
 
-  noStroke();
-  fill(0, 150);
-  rect(0, height - 28, width, 28);
-  fill(255);
-  textSize(14);
-  textAlign(CENTER, CENTER);
-  text(`${label}  (${nf(conf * 100, 2, 1)}%)`, width / 2, height - 14);
+  // Geen label/percentage overlay meer op de canvas.
+  // Tekst wordt enkel nog via window.uiSetLabels in de DOM getoond.
 }
 
 /* ================== MODEL-INITIALISATIE ================== */
@@ -209,7 +202,7 @@ async function initDefaultModel() {
   window.uiSetModel?.(false);
   modelReady = false;
 
-  try { await preflightDefaultModelAssets(); } 
+  try { await preflightDefaultModelAssets(); }
   catch (err) { console.warn('Preflight error:', err); }
 
   if (tmModel) try { tmModel.dispose(); } catch (e) {}
@@ -250,7 +243,7 @@ async function initModelFromCustomConfig(cfg) {
   try {
     // FIX: De library verwacht drie losse argumenten, geen array!
     tmModel = await tmImage.loadFromFiles(
-      config.modelFile, 
+      config.modelFile,
       config.weightFiles[0], // Neem de eerste binary file
       config.metadataFile
     );
