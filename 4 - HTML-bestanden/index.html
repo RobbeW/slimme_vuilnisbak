@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <!-- Voor didactisch gebruik aangepast door Robbe Wulgaert, Sint-Lievenscollege Gent. Niet verspreiden zonder naamsvermelding -->
+  <!-- Voor didactisch gebruik aangepast door Robbe Wulgaert, AI in de Klas. Niet verspreiden of aanpassen zonder naamsvermelding -->
   <!-- robbewulgaert.be -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Slimme Vuilnisbak v5</title>
+  <title>Slimme Vuilnisbak</title>
   <meta name="theme-color" content="#5200FF" />
 
   <!-- Google Fonts -->
@@ -86,6 +86,7 @@
       border:1px solid var(--border);
       box-shadow:0 6px 16px rgba(0,0,0,.15);
       cursor:pointer;
+      text-decoration:none;
     }
     .btn-pill:focus-visible{
       outline:3px solid var(--secondary);
@@ -167,17 +168,22 @@
       margin:.2rem 0 .6rem;
     }
 
-    /* Uitlegvakje */
+    /* Uitlegvakje (rechts boven) */
     .uitleg{
+      position:absolute;
+      top:10vh;
+      right:15vw;
+      margin:0;
+      max-width:420px;
       background:var(--surface);
       color:var(--text);
       border:1px solid var(--border);
       border-radius:12px;
       padding:14px;
-      margin:16px auto;
-      max-width:880px;
       box-shadow:0 8px 24px rgba(0,0,0,.08);
-      top:48px; 
+    }
+    .uitleg .btn-pill{
+      margin-top:12px;
     }
 
     /* Footer */
@@ -251,6 +257,43 @@
       gap:.5rem;
       margin-top:.5rem;
     }
+
+    /* Layout overrides: app + iPhone + uitleg */
+    #app{
+      position:relative;
+      min-height:100vh;
+    }
+
+    .container{
+      position:absolute;
+      top:10vh;    /* 10% onder de bovenrand */
+      left:15vw;   /* 15% uit de linkerrand */
+    }
+
+    .iphone{
+      transform:scale(1.1);       /* 10% groter */
+      transform-origin:top left;  /* groeit naar beneden/rechts */
+    }
+
+    /* Video schaalt mee met het iPhone-scherm */
+    .screen{
+      position:relative;
+      overflow:hidden;
+    }
+    .screen > video{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      z-index:0;
+    }
+    .screen .AIapp{
+      position:relative;
+      z-index:1;
+    }
   </style>
 </head>
 
@@ -314,7 +357,7 @@
               <button id="btn-theme" class="btn-pill" aria-pressed="false" aria-label="Wissel thema" title="Wissel thema">🌙</button>
               <button id="btn-help" class="btn-pill" aria-label="Toon uitleg" title="Toon uitleg">?</button>
               <button id="btn-privacy" class="btn-pill" aria-pressed="false" aria-label="Privacy-modus" title="Privacy-modus">🛑</button>
-              <button id="btn-custom-session" class="btn-pill btn-primary" aria-label="Eigen AI-model" title="Eigen AI-model">🔧 Model &amp; sessie</button>
+              <button id="btn-custom-session" class="btn-pill btn-primary" aria-label="Eigen AI-model" title="Eigen AI-model">🔧 AI-model aanpassen</button>
             </div>
           </div>
 
@@ -342,7 +385,7 @@
     <!-- ===== Uitlegblok + verbindknop ===== -->
     <div class="uitleg">
       <h1 id="uitleg-title">Slimme Vuilnisbak</h1>
-      <button id="connectButton">Verbind met microcontroller</button>
+      <button id="connectButton" class="btn-pill">Verbind met microcontroller</button>
       <ul id="class-list">
         <li>Biologisch</li>
         <li>Plastic</li>
@@ -352,9 +395,16 @@
       <p>
         Dit is een educatief AI-prototype.<br />
         Gemaakt voor educatief gebruik door<br />
-        Robbe Wulgaert (www.robbewulgaert.be).<br /><br />
-        Meer info: robbe.wulgaert@sintlievenscollege.be
+        Robbe Wulgaert (www.robbewulgaert.be).
       </p>
+      <a
+        href="https://www.robbewulgaert.be/contact"
+        class="btn-pill btn-primary"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Meer info / contact
+      </a>
     </div>
 
     <!-- ===== Help-overlay ===== -->
@@ -368,6 +418,7 @@
           <li>Wacht tot het label stabiel is.</li>
           <li>(Optioneel) Klik “Verbind met microcontroller”.</li>
           <li>Gebruik “Privacy-modus” om te pauzeren.</li>
+          <li>Je kan jouw zelfgetrainde AI-modellen (Teachable Machine) inladen met de paarse knop.</li>
         </ol>
       </div>
     </div>
@@ -377,18 +428,18 @@
       <div class="overlay-card">
         <button id="btn-close-custom-session" class="overlay-close" aria-label="Sluit">✕</button>
 
-        <h2 id="custom-session-title" tabindex="-1">Eigen AI-model en sessie-instellingen</h2>
+        <h2 id="custom-session-title" tabindex="-1">Eigen getraind model inladen:</h2>
         <p>Pas de titel en klassen van deze sessie aan en koppel jouw eigen Teachable Machine modelbestanden.</p>
 
         <form id="custom-session-form">
           <div>
             <label for="custom-title">Nieuwe titel voor dit project:</label>
-            <input type="text" id="custom-title" name="custom-title" placeholder="Bijvoorbeeld: Slimme vuilnisbak – PMD vs. restafval" />
+            <input type="text" id="custom-title" name="custom-title" placeholder="Bijvoorbeeld: Slimme Koelkast" />
           </div>
 
           <div>
             <label for="custom-classes">Klassen die je wilt detecteren <span style="font-weight:400;">(één per regel)</span>:</label>
-            <textarea id="custom-classes" name="custom-classes" placeholder="bijv.&#10;PMD&#10;papier&#10;restafval"></textarea>
+            <textarea id="custom-classes" name="custom-classes" placeholder="bijv.&#10;salade&#10;tomaat&#10;kaas"></textarea>
           </div>
 
           <div>
@@ -397,7 +448,7 @@
               <span title="Selecteer model.json, metadata.json en de .bin bestanden.">ⓘ</span>
             </label>
             <input type="file" id="custom-tm-files" name="custom-tm-files" multiple accept=".json,.bin" />
-            <small>Tip: Selecteer <code>model.json</code>, <code>metadata.json</code> en het <code>.bin</code>-bestand samen.</small>
+            <small>Tip: Selecteer <code>model.json</code>, <code>metadata.json</code> en het <code>.bin</code>-bestand.</small>
           </div>
 
           <div class="actions-row">
@@ -444,7 +495,10 @@
       const help = document.getElementById('overlay-help');
       const open = document.getElementById('btn-help');
       const close = document.getElementById('btn-close-help');
-      open?.addEventListener('click', ()=> { help.classList.remove('hidden'); document.getElementById('help-title')?.focus(); });
+      open?.addEventListener('click', ()=> {
+        help.classList.remove('hidden');
+        document.getElementById('help-title')?.focus();
+      });
       close?.addEventListener('click', ()=> help.classList.add('hidden'));
     })();
 
@@ -471,10 +525,34 @@
         localStorage.setItem(KEY, on ? '1' : '0');
         apply();
       };
+
       btn?.addEventListener('click', () => window.setPrivacy(!on));
+
+      // 'p' shortcut, maar negeer invoervelden en open overlays
       document.addEventListener('keydown', (e) => {
-        if ((e.key || '').toLowerCase() === 'p') window.setPrivacy(!on);
+        const key = (e.key || '').toLowerCase();
+        if (key !== 'p') return;
+
+        const target = e.target;
+        const tag = (target && target.tagName) ? target.tagName.toLowerCase() : '';
+        const isFormField =
+          tag === 'input' ||
+          tag === 'textarea' ||
+          tag === 'select';
+
+        const isEditable =
+          target &&
+          (target.isContentEditable ||
+           target.getAttribute?.('contenteditable') === 'true');
+
+        if (isFormField || isEditable) return;
+
+        const overlayOpen = document.querySelector('.overlay:not(.hidden)');
+        if (overlayOpen) return;
+
+        window.setPrivacy(!on);
       });
+
       apply();
     })();
 
@@ -497,9 +575,16 @@
         weightFiles: []
       };
 
-      function openModal(){ overlay.classList.remove('hidden'); setTimeout(()=> titleInp?.focus(), 50); }
-      function closeModal(){ overlay.classList.add('hidden'); }
-      function parseClasses(raw){ return raw.split('\n').map(s=>s.trim()).filter(Boolean); }
+      function openModal(){
+        overlay.classList.remove('hidden');
+        setTimeout(()=> titleInp?.focus(), 50);
+      }
+      function closeModal(){
+        overlay.classList.add('hidden');
+      }
+      function parseClasses(raw){
+        return raw.split('\n').map(s=>s.trim()).filter(Boolean);
+      }
 
       function extractTmFiles(fileList){
         const files = Array.from(fileList || []);
@@ -549,7 +634,6 @@
 
         if (!newTitle) { alert("Geef een titel op."); titleInp.focus(); return; }
         if (!classes.length) { alert("Geef minstens één klasse op."); classesTa.focus(); return; }
-        // Als tmFiles null is, is de alert al getoond in extractTmFiles
         if (!tmFiles) return;
 
         window.svCustomConfig = {
