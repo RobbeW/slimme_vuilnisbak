@@ -18,6 +18,43 @@
   <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="%235200FF"/><text x="32" y="40" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="white">IW</text></svg>' />
   <link rel="stylesheet" href="4%20-%20HTML-bestanden/style.css" />
   <script src="4%20-%20HTML-bestanden/landing.js" defer></script>
+  <style id="language-toggle-styles">
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(82, 0, 255, 0.22);
+  border-radius: 999px;
+  background: #fff;
+  padding: 4px;
+  box-shadow: 0 10px 24px rgba(82, 0, 255, 0.08);
+}
+.language-toggle button {
+  min-width: 44px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--muted, var(--delphi-muted, #625b70));
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+.language-toggle button.is-active {
+  background: var(--brand, var(--brand-purple, var(--delphi-blue, #5200FF)));
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(82, 0, 255, 0.20);
+}
+.language-toggle button:focus-visible {
+  outline: 3px solid rgba(61, 255, 208, 0.75);
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .language-toggle { order: 2; }
+}
+</style>
 </head>
 <body class="landing-page">
   <a class="skip-link" href="#main">Spring naar inhoud</a>
@@ -38,6 +75,10 @@
         <a href="#leerlijn">Leerlijn</a>
       </div>
       <div class="nav-actions">
+        <div class="language-toggle" role="group" aria-label="Taalkeuze">
+          <button type="button" class="is-active" data-language-choice="nl" aria-pressed="true">NL</button>
+          <button type="button" data-language-choice="en" aria-pressed="false">ENG</button>
+        </div>
         <a class="btn btn-primary" href="platform.html">Start platform</a>
         <button class="menu-button" id="menuButton" type="button" aria-expanded="false" aria-controls="navLinks">
           Menu
@@ -256,5 +297,195 @@
       </div>
     </div>
   </footer>
+<script id="language-toggle-script">
+(() => {
+  const LANGUAGE_KEY = "aiindeklas:index-language";
+  const TRANSLATIONS = {
+  "Spring naar inhoud": "Skip to content",
+  "Spring naar hoofdinhoud": "Skip to main content",
+  "Hoofdnavigatie": "Main navigation",
+  "Paginaonderdelen": "Page sections",
+  "Taalkeuze": "Language selection",
+  "Werking": "How it works",
+  "Wat leer je?": "What will you learn?",
+  "Onderdelen": "Components",
+  "Familie": "Family",
+  "Voor leerkrachten": "For teachers",
+  "Leerlijn": "Learning path",
+  "Benodigdheden": "Materials",
+  "Privacy": "Privacy",
+  "Opstelling": "Setup",
+  "Gebruik": "Use",
+  "README": "README",
+  "Platform": "Platform",
+  "Pythia": "Pythia",
+  "Start leerplatform": "Start learning platform",
+  "Start platform": "Start platform",
+  "Menu": "Menu",
+  "Bekijk de opdracht": "View the assignment",
+  "Lees README": "Read README",
+  "Leerplatform": "Learning platform",
+  "Onderzoeksplatform": "Research platform",
+  "Oefeningmaker": "Exercise builder",
+  "Open oefeningmaker": "Open exercise builder",
+  "Plaats in de leerlijn": "Place in the learning path",
+  "Van platformen naar projecten.": "From platforms to projects.",
+  "De platformen bouwen het computationeel denken op. De projecten gebruiken dat denken in een vakoverschrijdende opdracht waarin leerlingen bouwen, meten, testen en besluiten.": "The platforms build computational thinking. The projects use that thinking in a cross-curricular assignment in which students build, measure, test and conclude.",
+  "Leren computationeel denken": "Learning computational thinking",
+  "van blokken naar code, van code naar onderzoek": "from blocks to code, from code to research",
+  "Platformen": "Platforms",
+  "STEaM-projecten": "STEaM projects",
+  "Blockly": "Blockly",
+  "JavaScript": "JavaScript",
+  "HTML": "HTML",
+  "Dodona": "Dodona",
+  "Delphi": "Delphi",
+  "Robothand": "Robotic hand",
+  "Wind": "Wind",
+  "Slimme vuilnisbak": "Smart bin",
+  "Slimme Vuilnisbak": "Smart Bin",
+  "Fijnstof": "Particulate matter",
+  "visueel denken in stappen.": "visual step-by-step thinking.",
+  "logica in echte code.": "logic in real code.",
+  "webpagina's structureren.": "structuring webpages.",
+  "Python in de Klas met opvolging.": "Python in the Classroom with tracking.",
+  "licht oefenen in de browser.": "lightweight practice in the browser.",
+  "Arduino, sensoren, servo's en beweging.": "Arduino, sensors, servos and movement.",
+  "Micro:bit, energie, spanning en stroom.": "Micro:bit, energy, voltage and current.",
+  "AI, beeldherkenning, data en microcontrollers.": "AI, image recognition, data and microcontrollers.",
+  "Arduino, luchtkwaliteit, data en postersessie.": "Arduino, air quality, data and poster session.",
+  "De platformen trainen computationeel denken. De projecten laten leerlingen dat denken inzetten in een vakoverschrijdende opdracht.": "The platforms train computational thinking. The projects let students apply that thinking in a cross-curricular assignment.",
+  "Geen accounts, geen serveropslag.": "No accounts, no server storage.",
+  "Privacyvriendelijk": "Privacy-friendly",
+  "Geen installatie of leerlingenaccount.": "No installation or student account.",
+  "Lokale bibliotheken voor grafieken en PDF-export.": "Local libraries for charts and PDF export.",
+  "Geschikt voor GitHub Pages.": "Suitable for GitHub Pages.",
+  "robbewulgaert.be": "robbewulgaert.be",
+  "AI in de Klas": "AI in de Klas",
+  "Auteur: Robbe Wulgaert · AI in de Klas · robbewulgaert.be": "Author: Robbe Wulgaert · AI in de Klas · robbewulgaert.be",
+  "© 2026 Robbe Wulgaert. Alle rechten voorbehouden.": "© 2026 Robbe Wulgaert. All rights reserved.",
+  "Auteur: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert.": "Author: Robbe Wulgaert · AI in de Klas · robbewulgaert.be · © 2026 Robbe Wulgaert.",
+  "Robbe Wulgaert, AI in de Klas, robbewulgaert.be": "Robbe Wulgaert, AI in de Klas, robbewulgaert.be",
+  "Licentie": "License",
+  "Third-party notices": "Third-party notices",
+  "Contact": "Contact",
+  "AI · camera · microcontroller": "AI · camera · microcontroller",
+  "Leerlingen maken kennis met de volledige levenscyclus van een AI-model. Ze verzamelen data, sorteren, kennen labels toe, trainen hun eigen AI-model, voeren testen uit, sturen het model bij en koppelen dit aan microcontrollers zoals de Arduino of micro:bit.": "Students explore the full life cycle of an AI model. They collect data, sort it, assign labels, train their own AI model, test it, improve it and connect it to microcontrollers such as Arduino or micro:bit.",
+  "Van foto naar beslissing.": "From photo to decision.",
+  "Voorspel": "Predict",
+  "Leerlingen noteren welke klasse ze verwachten en waarom.": "Students note which class they expect and why.",
+  "Test": "Test",
+  "De camera of een testbeeld wordt door het AI-model beoordeeld.": "The camera or a test image is evaluated by the AI model.",
+  "Bekijk": "Inspect",
+  "De webpagina toont de gekozen klasse en de zekerheid per klasse.": "The webpage shows the chosen class and the confidence for each class.",
+  "Verbind": "Connect",
+  "Bij een stabiele voorspelling stuurt de browser een code naar de microcontroller.": "When the prediction is stable, the browser sends a code to the microcontroller.",
+  "Besluit": "Conclude",
+  "Leerlingen beschrijven wanneer het model goed werkt en welke voorbeelden ontbreken.": "Students describe when the model works well and which examples are missing.",
+  "De opstelling": "The setup",
+  "Maak artificiële intelligentie verklaarbaar.": "Make artificial intelligence explainable.",
+  "De klas werkt met echte beelden, een model uit Teachable Machine en een microcontroller die reageert op de voorspelling.": "The class works with real images, a model from Teachable Machine and a microcontroller that responds to the prediction.",
+  "Het model herkent klassen zoals biologisch, plastic, metaal en papier.": "The model recognises classes such as organic, plastic, metal and paper.",
+  "De browser toont niet alleen het antwoord, maar ook de zekerheid.": "The browser shows not only the answer, but also the confidence.",
+  "De Arduino of micro:bit gebruikt de ontvangen code om de sorteeractie zichtbaar te maken.": "The Arduino or micro:bit uses the received code to make the sorting action visible.",
+  "Een AI-model is geen magische doos.": "An AI model is not a magic box.",
+  "Klassen": "Classes",
+  "Leerlingen koppelen een zichtbaar object aan een label dat het model kent.": "Students link a visible object to a label the model knows.",
+  "Zekerheid": "Confidence",
+  "De confidence-score helpt om te bespreken wanneer een voorspelling bruikbaar is.": "The confidence score helps discuss when a prediction is usable.",
+  "Dataset": "Dataset",
+  "Foute voorspellingen worden aanleiding om te kijken naar ontbrekende of te eenzijdige voorbeelden.": "Wrong predictions become a reason to look for missing or one-sided examples.",
+  "Seriële communicatie": "Serial communication",
+  "De browser stuurt een eenvoudige code naar de microcontroller.": "The browser sends a simple code to the microcontroller.",
+  "Testen": "Testing",
+  "Leerlingen vergelijken verwachting, voorspelling en fysieke reactie.": "Students compare expectation, prediction and physical response.",
+  "Schaalbaar lesmateriaal voor lager onderwijs tot de tweede graad van het secundair onderwijs.": "Scalable teaching material for primary education up to the second stage of secondary education.",
+  "Dit lesmateriaal laat leerlingen kennismaken met AI-technologie. Kies zelf hoe uitgebreid je dit aanpakt. Enkel online? Train je een eigen AI-model? Koppel je dit met een micro:bit of bouw je een volledige opstelling met jouw klas?": "This teaching material introduces students to AI technology. You choose how far to take it. Online only? Train your own AI model? Connect it to a micro:bit or build a full setup with your class?",
+  "Geen leerlingenaccount nodig.": "No student account required.",
+  "WebSerial voor Chrome en Edge.": "WebSerial for Chrome and Edge.",
+  "Demomodus wanneer camera of hardware ontbreekt.": "Demo mode when camera or hardware is unavailable.",
+  "Rapport met naam, klas, voorspelling, observaties en reflectie.": "Report with name, class, prediction, observations and reflection."
+};
+  const META = {
+  "title": "Smart Bin",
+  "description": "Smart Bin is a cross-curricular STEaM project in which students test an AI model and connect it to a microcontroller."
+};
+  const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "INPUT", "SELECT", "OPTION"]);
+  const TEXT_NODES = [];
+  const ATTR_NODES = [];
+  let originalTitle = document.title;
+  let originalDescription = null;
+  const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  function preserveOuterWhitespace(original, translated) {
+    const start = original.match(/^\s*/)?.[0] || "";
+    const end = original.match(/\s*$/)?.[0] || "";
+    return start + translated + end;
+  }
+  function collectTextNodes() {
+    if (TEXT_NODES.length) return;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent || SKIP_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+        return normalize(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      TEXT_NODES.push({ node, original: node.nodeValue, key: normalize(node.nodeValue) });
+    }
+  }
+  function collectAttributes() {
+    if (ATTR_NODES.length) return;
+    document.querySelectorAll("[aria-label], [alt], [title], [placeholder]").forEach((element) => {
+      ["aria-label", "alt", "title", "placeholder"].forEach((attr) => {
+        if (element.hasAttribute(attr)) {
+          const original = element.getAttribute(attr);
+          ATTR_NODES.push({ element, attr, original, key: normalize(original) });
+        }
+      });
+    });
+  }
+  function setLanguage(language) {
+    const useEnglish = language === "en";
+    collectTextNodes();
+    collectAttributes();
+    TEXT_NODES.forEach((entry) => {
+      const translated = TRANSLATIONS[entry.key];
+      entry.node.nodeValue = useEnglish && translated ? preserveOuterWhitespace(entry.original, translated) : entry.original;
+    });
+    ATTR_NODES.forEach((entry) => {
+      const translated = TRANSLATIONS[entry.key];
+      entry.element.setAttribute(entry.attr, useEnglish && translated ? translated : entry.original);
+    });
+    document.documentElement.lang = useEnglish ? "en" : "nl-BE";
+    document.title = useEnglish && META.title ? META.title : originalTitle;
+    const description = document.querySelector('meta[name="description"]');
+    if (description) {
+      if (originalDescription === null) originalDescription = description.getAttribute("content") || "";
+      description.setAttribute("content", useEnglish && META.description ? META.description : originalDescription);
+    }
+    document.querySelectorAll("[data-language-choice]").forEach((button) => {
+      const isActive = button.dataset.languageChoice === (useEnglish ? "en" : "nl");
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+    try { localStorage.setItem(LANGUAGE_KEY, useEnglish ? "en" : "nl"); } catch (error) {}
+  }
+  function initLanguageToggle() {
+    document.querySelectorAll("[data-language-choice]").forEach((button) => {
+      button.addEventListener("click", () => setLanguage(button.dataset.languageChoice));
+    });
+    let saved = "nl";
+    try {
+      const requested = new URLSearchParams(window.location.search).get("lang");
+      saved = requested || localStorage.getItem(LANGUAGE_KEY) || "nl";
+    } catch (error) {}
+    setLanguage(saved === "en" ? "en" : "nl");
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initLanguageToggle);
+  else initLanguageToggle();
+})();
+</script>
 </body>
 </html>
