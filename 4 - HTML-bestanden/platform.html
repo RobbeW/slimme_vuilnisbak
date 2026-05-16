@@ -1,0 +1,325 @@
+<!doctype html>
+<!--
+  Slimme Vuilnisbak - platform
+  Copyright (c) 2026 Robbe Wulgaert
+-->
+<html lang="nl-BE">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Platform Slimme Vuilnisbak</title>
+  <meta
+    name="description"
+    content="Platform voor Slimme Vuilnisbak met Teachable Machine, camera, WebSerial, demomodus, observatielog en rapportage."
+  />
+  <meta name="theme-color" content="#5200FF" />
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="%235200FF"/><text x="32" y="40" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="white">IW</text></svg>' />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js" defer></script>
+  <script src="p5.min.js"></script>
+  <script src="sketch.js" defer></script>
+</head>
+<body class="app-page smartbin-platform">
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Slimme Vuilnisbak</p>
+      <h1>Platform Slimme Vuilnisbak</h1>
+    </div>
+    <div class="header-actions">
+      <a class="secondary-button header-link" href="index.html">Startpagina</a>
+      <span id="st-model" class="status-pill">Model niet geladen</span>
+      <span id="st-camera" class="status-pill">Camera niet actief</span>
+      <span id="st-serial" class="status-pill">Niet verbonden</span>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section id="compatibility-notice" class="notice hidden" aria-live="polite"></section>
+
+    <nav class="workflow-nav" aria-label="Projectstappen">
+      <a href="#prediction" class="workflow-step is-active" data-step-link="prediction">1. Voorspel</a>
+      <a href="#model" class="workflow-step" data-step-link="model">2. Model</a>
+      <a href="#custom-model" class="workflow-step" data-step-link="custom-model">3. Kies model</a>
+      <a href="#test" class="workflow-step" data-step-link="test">4. Test</a>
+      <a href="#connect" class="workflow-step" data-step-link="connect">5. Verbind</a>
+      <a href="#sort" class="workflow-step" data-step-link="sort">6. Sorteer</a>
+      <a href="#conclusion" class="workflow-step" data-step-link="conclusion">7. Besluit</a>
+    </nav>
+
+    <section id="prediction" class="workflow-section">
+      <div class="section-heading">
+        <p class="eyebrow">Voorspellen</p>
+        <h2>Wat verwacht je dat het model herkent?</h2>
+      </div>
+      <div class="form-grid">
+        <label>
+          Testobject
+          <input id="input-object" type="text" placeholder="Bijv. blikje, banaanschil, papiertje" />
+        </label>
+        <label>
+          Verwachte klasse
+          <select id="input-expected-class">
+            <option value="">Kies een klasse</option>
+            <option>BIO</option>
+            <option>PLASTIC</option>
+            <option>METAAL</option>
+            <option>PAPIER</option>
+            <option>MENS</option>
+          </select>
+        </label>
+        <label class="wide-field">
+          Waarom verwacht je dit?
+          <textarea id="input-prediction-reason" rows="2" placeholder="Ik verwacht deze klasse omdat ..."></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section id="model" class="workflow-section">
+      <div class="section-heading">
+        <p class="eyebrow">Model</p>
+        <h2>Controleer de klassen en codes</h2>
+      </div>
+      <div class="model-grid">
+        <article class="concept-panel">
+          <h3>Wat doet het AI-model?</h3>
+          <p>
+            Het model vergelijkt het camerabeeld met voorbeelden uit de training. Per klasse berekent het een zekerheid.
+            De hoogste zekerheid wordt de voorspelling.
+          </p>
+          <p>
+            De browser stuurt pas een code wanneer de voorspelling stabiel genoeg is. Zo reageert de microcontroller minder snel op losse foutjes.
+          </p>
+        </article>
+        <article class="mapping-panel">
+          <div class="panel-title-row">
+            <h3>Klasse naar code</h3>
+            <button id="btn-reset-mapping" class="ghost-button" type="button">Reset codes</button>
+          </div>
+          <div class="mapping-table" id="mapping-table" aria-live="polite"></div>
+          <small>De code wordt naar de Arduino of micro:bit gestuurd. Gebruik dezelfde codes in je microcontrollerprogramma.</small>
+        </article>
+      </div>
+    </section>
+
+    <section id="custom-model" class="workflow-section">
+      <div class="section-heading">
+        <p class="eyebrow">Model kiezen</p>
+        <h2>Gebruik het standaardmodel of laad je eigen model</h2>
+      </div>
+      <div class="model-upload-grid">
+        <article class="concept-panel">
+          <h3>Standaardmodel</h3>
+          <p>
+            De pagina start met het model in de map <code>image_model</code>. Dat is handig om het platform snel te testen.
+          </p>
+          <p>
+            Werk je met een eigen Teachable Machine model? Exporteer als TensorFlow.js en laad hier de drie bestanden.
+          </p>
+        </article>
+        <form id="custom-session-form" class="model-upload-panel">
+          <label>
+            Projecttitel
+            <input type="text" id="custom-title" placeholder="Bijv. Slimme koelkast" />
+          </label>
+          <label>
+            Klassen, een per regel
+            <textarea id="custom-classes" rows="4" placeholder="BIO&#10;PLASTIC&#10;METAAL&#10;PAPIER"></textarea>
+          </label>
+          <label>
+            Modelbestanden
+            <input type="file" id="custom-tm-files" multiple accept=".json,.bin" />
+          </label>
+          <small>Selecteer <code>model.json</code>, <code>metadata.json</code> en <code>weights.bin</code>.</small>
+          <p id="custom-model-status" class="model-upload-status" aria-live="polite">
+            Standaardmodel wordt gebruikt.
+          </p>
+          <div class="toolbar">
+            <button id="btn-cancel-custom-session" class="secondary-button" type="reset">Maak leeg</button>
+            <button class="primary-button" type="submit">Laad model</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="test" class="workflow-section">
+      <div class="section-heading">
+        <p class="eyebrow">Testen</p>
+        <h2>Camera, testbeeld of demomodus</h2>
+      </div>
+      <div class="platform-grid">
+        <div class="phone-stage">
+          <div class="iphone app-phone">
+            <div class="buttons"><div class="silent"></div><div class="sleep"></div><div class="vol-up"></div><div class="vol-down"></div></div>
+            <div class="top"><div class="black-bar"></div><div class="iphone-top"></div></div>
+            <div class="components"><div class="speaker"></div><div class="camera"></div></div>
+            <div class="top-bar"></div>
+            <div class="bottom-bar"></div>
+            <div class="screen">
+              <div class="AIapp">
+                <h2>Slimme Vuilnisbak</h2>
+                <div id="canvasContainer" class="canvas-frame" role="img" aria-label="Live camerabeeld of testbeeld"></div>
+                <div id="labelContainer" class="prediction-card" aria-live="polite">
+                  <span>Voorspelling</span>
+                  <strong id="resultLabel">Wacht op model</strong>
+                  <small id="confidenceLabel">--</small>
+                </div>
+              </div>
+              <div class="lock-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-stack">
+          <article class="control-panel">
+            <h3>Bron</h3>
+            <p>Kies hoe je het model wilt testen. Gebruik de demomodus wanneer er geen camera of hardware beschikbaar is.</p>
+            <div class="toolbar">
+              <button id="btn-start-camera" class="primary-button" type="button">Start camera</button>
+              <label class="file-button secondary-button" for="input-test-image">Upload testbeeld</label>
+              <input id="input-test-image" class="visually-hidden" type="file" accept="image/*" />
+              <button id="btn-demo" class="secondary-button" type="button">Start demomodus</button>
+              <button id="btn-privacy" class="ghost-button" type="button" aria-pressed="false">Pauzeer beeld</button>
+            </div>
+          </article>
+
+          <article class="confidence-panel">
+            <h3>Zekerheid per klasse</h3>
+            <div id="confidence-list" class="confidence-list" aria-live="polite"></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="connect" class="workflow-section">
+      <div class="section-heading">
+        <p class="eyebrow">Verbinden</p>
+        <h2>Microcontroller en diagnose</h2>
+      </div>
+      <div class="control-panel serial-panel">
+        <div>
+          <p>
+            Verbind via WebSerial. Gebruik Chrome of Edge via HTTPS, GitHub Pages of localhost.
+            De browser stuurt een code plus nieuwe regel, bijvoorbeeld <code>2\n</code>.
+          </p>
+          <div class="toolbar">
+            <button id="btn-connect" class="primary-button" type="button">Verbind microcontroller</button>
+            <button id="btn-disconnect" class="secondary-button" type="button" disabled>Verbreek verbinding</button>
+          </div>
+        </div>
+        <div class="diagnostics-panel" aria-live="polite">
+          <h3>Diagnose</h3>
+          <ul>
+            <li id="diag-browser">Browsercontrole: --</li>
+            <li id="diag-model">Model: --</li>
+            <li id="diag-source">Beeldbron: --</li>
+            <li id="diag-serial">Serieel: --</li>
+          </ul>
+          <small id="serial-preview">Laatste code: --</small>
+        </div>
+      </div>
+    </section>
+
+    <section id="sort" class="workflow-section">
+      <div class="section-heading">
+        <p class="eyebrow">Sorteren</p>
+        <h2>Vergelijk verwachting, voorspelling en reactie</h2>
+      </div>
+      <div class="metric-grid">
+        <article class="metric-card">
+          <span>Verwacht</span>
+          <strong id="metric-expected">--</strong>
+        </article>
+        <article class="metric-card">
+          <span>Voorspeld</span>
+          <strong id="metric-predicted">--</strong>
+        </article>
+        <article class="metric-card">
+          <span>Zekerheid</span>
+          <strong id="metric-confidence">--</strong>
+        </article>
+        <article class="metric-card">
+          <span>Code</span>
+          <strong id="metric-code">--</strong>
+        </article>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tijd</th>
+              <th>Klasse</th>
+              <th>Zekerheid</th>
+              <th>Code</th>
+              <th>Verstuurd</th>
+            </tr>
+          </thead>
+          <tbody id="observation-body">
+            <tr><td colspan="5">Nog geen observatie.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="conclusion" class="workflow-section">
+      <div class="section-heading">
+        <p class="eyebrow">Besluiten</p>
+        <h2>Wat zegt deze test over je model?</h2>
+      </div>
+      <div class="form-grid">
+        <label>
+          Besluit
+          <textarea id="input-conclusion" rows="3" placeholder="Het model herkende ... omdat ..."></textarea>
+        </label>
+        <label>
+          Reflectie
+          <textarea id="input-reflection" rows="3" placeholder="Welke foto's zou je toevoegen om het model beter te maken?"></textarea>
+        </label>
+      </div>
+      <div class="table-actions report-actions">
+        <button id="btn-help" class="secondary-button" type="button">Help</button>
+        <button id="btn-report" class="primary-button" type="button">Maak PDF</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="overlay-help" class="report-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <article class="report-modal help-modal">
+      <button id="btn-close-help" class="close-button" type="button" aria-label="Sluit helpvenster">x</button>
+      <p class="eyebrow">Help</p>
+      <h2 id="help-title">Wat zie je op het platform?</h2>
+      <dl class="help-list">
+        <dt>Klasse</dt>
+        <dd>Het label dat het model aan een beeld koppelt, zoals PLASTIC of PAPIER.</dd>
+        <dt>Zekerheid</dt>
+        <dd>Hoe sterk het model denkt dat een klasse past bij het beeld. 100% is heel zeker, maar niet automatisch juist.</dd>
+        <dt>Code</dt>
+        <dd>Het teken dat naar de microcontroller gaat. Die code bepaalt welke LED, servo of sorteeractie reageert.</dd>
+        <dt>Foute voorspelling</dt>
+        <dd>Dat is leermateriaal: kijk welke voorbeelden ontbreken of te veel op elkaar lijken.</dd>
+      </dl>
+    </article>
+  </div>
+
+  <div id="report-modal" class="report-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
+    <form id="report-form" class="report-modal">
+      <button id="btn-cancel-report" class="close-button" type="button" aria-label="Sluit rapportvenster">x</button>
+      <p class="eyebrow">Rapport</p>
+      <h2 id="report-modal-title">Wie maakt dit rapport?</h2>
+      <label>
+        Naam of namen
+        <input id="report-names" type="text" placeholder="Bijv. Noor, Adam en Lina" required />
+      </label>
+      <label>
+        Klas
+        <input id="report-class" type="text" placeholder="Bijv. 3IW A" required />
+      </label>
+      <div class="modal-actions">
+        <button class="secondary-button" id="btn-report-back" type="button">Annuleer</button>
+        <button class="primary-button" type="submit">Maak PDF</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

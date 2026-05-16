@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Launcher voor Slimme Vuilnisbak (p5 + ml5 + WebSerial)
-© 2025 Robbe Wulgaert · AI in de Klas — Hergebruik toegestaan met bronvermelding
+Launcher voor Slimme Vuilnisbak (p5 + Teachable Machine + WebSerial)
+Copyright (c) 2026 Robbe Wulgaert - AI in de Klas
 
 Werking:
-- Vindt automatisch de map “4 - HTML-bestanden” naast dit .py-bestand.
-- Herkent varianten: “4- HTML-bestanden”, “4_HTML-bestanden”, “HTML-bestanden”.
+- Vindt automatisch de map "4 - HTML-bestanden" naast dit .py-bestand.
+- Herkent varianten: "4- HTML-bestanden", "4_HTML-bestanden", "HTML-bestanden".
 - Zoekt anders beperkt in de bovenliggende map, en als laatste redmiddel in Downloads.
 - Preflight controle van image_model/ (model.json + weights + metadata.json).
 - Start een lokale HTTP-server en opent index.html in de browser.
