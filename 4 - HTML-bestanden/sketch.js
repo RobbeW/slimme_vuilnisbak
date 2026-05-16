@@ -11,7 +11,8 @@ const VOTE_WINDOW = 5;
 const SEND_DEBOUNCE_MS = 500;
 
 let tmModel = null;
-let video = null;
+let cameraVideo = null;
+let cameraStream = null;
 let p5Canvas = null;
 let uploadedImageElement = null;
 let uploadedP5Image = null;
@@ -113,12 +114,8 @@ function draw() {
     return;
   }
 
-  if (video && cameraReady) {
-    push();
-    translate(width, 0);
-    scale(-1, 1);
-    image(video, 0, 0, width, height);
-    pop();
+  if (cameraVideo && cameraReady) {
+    drawCameraFrame();
     return;
   }
 
@@ -136,6 +133,19 @@ function drawMessage(text) {
   textAlign(CENTER, CENTER);
   textSize(18);
   text(text, width / 2, height / 2);
+}
+
+function drawCameraFrame() {
+  if (!cameraVideo || cameraVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+    drawMessage("Camera wordt gestart");
+    return;
+  }
+
+  push();
+  translate(width, 0);
+  scale(-1, 1);
+  drawingContext.drawImage(cameraVideo, 0, 0, width, height);
+  pop();
 }
 
 function bindUi() {
@@ -203,9 +213,18 @@ function setCompatibilityNotice() {
   }
 
   if (problems.length && els.notice) {
-    els.notice.textContent = problems.join(" ");
-    els.notice.classList.remove("hidden");
+    showNotice(problems.join(" "));
   }
+}
+
+function showNotice(message) {
+  if (!els.notice) return;
+  els.notice.textContent = message;
+  els.notice.classList.remove("hidden");
+}
+
+function hideNotice() {
+  els.notice?.classList.add("hidden");
 }
 
 function updateStatus(el, text, on = false, warn = false) {
@@ -239,20 +258,105 @@ async function startCamera() {
   demoMode = false;
   uploadedImageElement = null;
   uploadedP5Image = null;
+  cameraReady = false;
+  updateDiagnostics();
 
-  if (!video) {
-    video = createCapture(VIDEO, () => {
-      cameraReady = true;
-      updateDiagnostics();
-    });
-    video.size(320, 240);
-    video.hide();
-  } else {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showNotice("Deze browser geeft geen cameratoegang aan webpagina's. Gebruik Chrome of Edge via HTTPS, GitHub Pages of localhost.");
+    updateDiagnostics();
+    return;
+  }
+
+  stopCameraStream();
+
+  try {
+    cameraStream = await requestCameraStream();
+    cameraVideo = document.createElement("video");
+    cameraVideo.muted = true;
+    cameraVideo.autoplay = true;
+    cameraVideo.playsInline = true;
+    cameraVideo.setAttribute("playsinline", "");
+    cameraVideo.srcObject = cameraStream;
+
+    await waitForVideoReady(cameraVideo);
+    await cameraVideo.play();
     cameraReady = true;
+    hideNotice();
+    els.startCamera.textContent = "Herstart camera";
+  } catch (error) {
+    console.warn("Camera starten mislukt:", error);
+    cameraReady = false;
+    cameraVideo = null;
+    cameraStream = null;
+    showNotice("De camera kon niet gestart worden. Controleer de browsertoestemming of sluit een andere app die de camera gebruikt.");
   }
 
   els.demo.textContent = "Start demomodus";
   updateDiagnostics();
+}
+
+async function requestCameraStream() {
+  const preferred = {
+    audio: false,
+    video: {
+      width: { ideal: 640 },
+      height: { ideal: 480 },
+      facingMode: { ideal: "environment" }
+    }
+  };
+
+  try {
+    return await navigator.mediaDevices.getUserMedia(preferred);
+  } catch {
+    return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  }
+}
+
+function waitForVideoReady(videoElement) {
+  return new Promise((resolve, reject) => {
+    if (videoElement.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      resolve();
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Camera metadata timeout"));
+    }, 6000);
+
+    function cleanup() {
+      window.clearTimeout(timeout);
+      videoElement.removeEventListener("loadedmetadata", onReady);
+      videoElement.removeEventListener("canplay", onReady);
+      videoElement.removeEventListener("error", onError);
+    }
+
+    function onReady() {
+      cleanup();
+      resolve();
+    }
+
+    function onError() {
+      cleanup();
+      reject(new Error("Camera video error"));
+    }
+
+    videoElement.addEventListener("loadedmetadata", onReady, { once: true });
+    videoElement.addEventListener("canplay", onReady, { once: true });
+    videoElement.addEventListener("error", onError, { once: true });
+  });
+}
+
+function stopCameraStream() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((track) => track.stop());
+  }
+  cameraStream = null;
+  if (cameraVideo) {
+    cameraVideo.pause();
+    cameraVideo.srcObject = null;
+  }
+  cameraVideo = null;
 }
 
 function handleTestImageUpload(event) {
@@ -261,9 +365,7 @@ function handleTestImageUpload(event) {
 
   demoMode = false;
   cameraReady = false;
-  if (video?.elt?.srcObject) {
-    video.elt.srcObject.getTracks().forEach((track) => track.stop());
-  }
+  stopCameraStream();
 
   const url = URL.createObjectURL(file);
   uploadedImageElement = new Image();
@@ -286,9 +388,7 @@ function toggleDemoMode() {
   uploadedP5Image = null;
   cameraReady = false;
 
-  if (video?.elt?.srcObject) {
-    video.elt.srcObject.getTracks().forEach((track) => track.stop());
-  }
+  stopCameraStream();
 
   els.demo.textContent = demoMode ? "Stop demomodus" : "Start demomodus";
   els.privacy?.setAttribute("aria-pressed", "false");
@@ -469,9 +569,9 @@ async function classifyLoop() {
       continue;
     }
 
-    if (modelReady && cameraReady && video && tmModel) {
+    if (modelReady && cameraReady && cameraVideo && tmModel) {
       try {
-        const predictions = await tmModel.predict(video.elt);
+        const predictions = await tmModel.predict(cameraVideo);
         handleResults(predictions);
       } catch (error) {
         console.warn("Classificatiefout:", error);
