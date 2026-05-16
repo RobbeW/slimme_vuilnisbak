@@ -127,12 +127,12 @@ function draw() {
   drawMessage("Start camera of demo");
 }
 
-function drawMessage(text) {
+function drawMessage(message) {
   fill(248, 247, 243);
   noStroke();
   textAlign(CENTER, CENTER);
   textSize(18);
-  text(text, width / 2, height / 2);
+  text(message, width / 2, height / 2);
 }
 
 function drawCameraFrame() {
