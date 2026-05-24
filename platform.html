@@ -498,6 +498,7 @@ body > header .tab.active {
           <div class="toolbar">
             <button id="btn-connect" class="primary-button" type="button">Verbind microcontroller</button>
             <button id="btn-disconnect" class="secondary-button" type="button" disabled>Verbreek verbinding</button>
+            <button id="btn-code-help" class="secondary-button steam-code-toolbar-button" type="button">Waar vind ik de code?</button>
           </div>
         </div>
         <div class="diagnostics-panel" aria-live="polite">
@@ -592,6 +593,16 @@ body > header .tab.active {
         <dt>Foute voorspelling</dt>
         <dd>Dat is leermateriaal: kijk welke voorbeelden ontbreken of te veel op elkaar lijken.</dd>
       </dl>
+    </article>
+  </div>
+
+  <div id="code-help-modal" class="report-overlay hidden code-help-overlay" role="dialog" aria-modal="true" aria-labelledby="code-help-title">
+    <article class="report-modal steam-code-modal">
+      <button id="btn-close-code-help" class="close-button" type="button" aria-label="Sluit codehulp">x</button>
+      <p class="eyebrow">Code uploaden</p>
+      <h2 id="code-help-title">Waar vind ik de microcontrollercode?</h2>
+      <p>Gebruik je een Arduino of micro:bit, dan moet die de juiste projectcode krijgen. Je vindt de microcontrollercode tussen de andere bronbestanden.</p>
+      <a class="steam-code-link" href="https://github.com/RobbeW/slimme_vuilnisbak" target="_blank" rel="noopener noreferrer">Open RobbeW/slimme_vuilnisbak op GitHub</a>
     </article>
   </div>
 
@@ -783,6 +794,12 @@ body > header .tab.active {
   "De browser stuurt een code plus nieuwe regel, bijvoorbeeld": "The browser sends a code plus a new line, for example",
   "Verbind microcontroller": "Connect microcontroller",
   "Verbreek verbinding": "Disconnect",
+  "Waar vind ik de code?": "Where can I find the code?",
+  "Code uploaden": "Upload code",
+  "Waar vind ik de microcontrollercode?": "Where can I find the microcontroller code?",
+  "Gebruik je een Arduino of micro:bit, dan moet die de juiste projectcode krijgen. Je vindt de microcontrollercode tussen de andere bronbestanden.": "If you use an Arduino or micro:bit, it needs the correct project code. You can find the microcontroller code with the other source files.",
+  "Open RobbeW/slimme_vuilnisbak op GitHub": "Open RobbeW/slimme_vuilnisbak on GitHub",
+  "Sluit codehulp": "Close code help",
   "Browsercontrole: --": "Browser check: --",
   "Model: --": "Model: --",
   "Beeldbron: --": "Image source: --",
