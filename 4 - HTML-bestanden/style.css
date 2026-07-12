@@ -722,44 +722,46 @@ code {
 }
 
 .workflow-nav {
-  position: sticky;
-  top: 90px;
-  z-index: 30;
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  margin-bottom: 22px;
-  border: 1px solid rgba(82, 0, 255, 0.14);
-  border-radius: 999px;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 14px 30px rgba(32, 20, 54, 0.08);
-  backdrop-filter: blur(12px);
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 1rem 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .workflow-step {
-  flex: 0 0 auto;
-  min-height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 2.5rem;
+  display: grid;
+  place-items: center;
   border-radius: 999px;
-  padding: 11px 15px;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid rgba(82, 0, 255, 0.32);
+  background: #ffffff;
   color: var(--brand-dark);
   font-weight: 900;
   text-decoration: none;
   letter-spacing: 0;
-  transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard);
+  transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard);
 }
 
 .workflow-step:hover,
 .workflow-step:focus-visible {
   background: var(--brand-softer);
-  outline: none;
+  border-color: var(--brand);
   transform: translateY(-2px);
 }
 
+.workflow-step:focus-visible {
+  outline: 3px solid rgba(61, 255, 208, 0.6);
+  outline-offset: 2px;
+}
+
 .workflow-step.is-active {
+  border-color: var(--brand);
   background: var(--brand);
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(82, 0, 255, 0.22);
@@ -1365,6 +1367,10 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 1100px) {
+  .workflow-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .landing-hero,
   .split,
   .split-section,
@@ -1386,6 +1392,10 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 760px) {
+  .workflow-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .nav,
   .footer-inner,
   .app-header {
