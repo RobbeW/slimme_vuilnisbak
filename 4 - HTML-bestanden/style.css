@@ -1,26 +1,34 @@
 /* Slimme Vuilnisbak - Robbe Wulgaert, AI in de Klas */
 
 :root {
-  --brand: #5200ff;
-  --brand-dark: #3a00b8;
-  --brand-softer: #f7f3ff;
-  --accent-green: #00a66a;
-  --accent-teal: #03ddef;
+  --brand: #5200FF;
+  --brand-dark: #3700B3;
+  --brand-soft: #F7F3FF;
+  --brand-softer: var(--brand-soft);
+  --accent: #3DFFD0;
+  --accent-green: var(--accent);
+  --accent-teal: var(--accent);
   --accent-yellow: #ffb000;
   --accent-rose: #d0006f;
-  --paper: #ffffff;
-  --bg: #f8f7f3;
+  --surface: #FFFFFF;
+  --paper: var(--surface);
+  --bg: #F8F7F3;
   --ink: #160033;
-  --text: #273142;
-  --muted: #625b70;
-  --line: #e2ddea;
+  --text: #1D1930;
+  --muted: #625B70;
+  --line: #E2DDEA;
   --shadow: 0 18px 55px rgba(32, 20, 54, 0.1);
   --card-shadow: 0 10px 30px rgba(32, 20, 54, 0.08);
   --max-width: 1180px;
-  --font-body: Roboto, Inter, "Segoe UI", Arial, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --font-size-hero: clamp(2.45rem, 7vw, 5.8rem);
   --font-size-section-title: clamp(1.8rem, 4vw, 3.25rem);
   --font-size-lead: clamp(1.05rem, 2vw, 1.32rem);
+  --motion-fast: 150ms;
+  --motion-medium: 260ms;
+  --motion-slow: 520ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -96,7 +104,7 @@ code {
   background: var(--paper);
   color: var(--ink);
   font-weight: 800;
-  transition: transform 120ms ease;
+  transition: transform var(--motion-fast) var(--ease-standard);
 }
 
 .skip-link:focus {
@@ -206,7 +214,8 @@ code {
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+  letter-spacing: 0;
+  transition: transform var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
   white-space: nowrap;
 }
 
@@ -305,7 +314,7 @@ code {
   color: var(--brand);
   font-size: 0.82rem;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -469,13 +478,13 @@ code {
 .tree-node {
   display: block;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 8px;
   padding: 18px;
   background: #ffffff;
   color: inherit;
   text-decoration: none;
   box-shadow: 0 10px 28px rgba(82, 0, 255, 0.08);
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  transition: transform var(--motion-medium) var(--ease-out), box-shadow var(--motion-medium) var(--ease-out), border-color var(--motion-fast) var(--ease-standard);
 }
 
 .tree-node strong {
@@ -646,9 +655,7 @@ code {
 /* Platform */
 
 .app-page {
-  background:
-    radial-gradient(circle at top left, rgba(82, 0, 255, 0.08), transparent 34rem),
-    var(--bg);
+  background: var(--bg);
 }
 
 .app-header {
@@ -687,9 +694,9 @@ code {
 }
 
 .status-pill.is-on {
-  border-color: rgba(0, 166, 106, 0.35);
-  background: #edfff7;
-  color: #006a45;
+  border-color: var(--accent);
+  background: var(--brand-soft);
+  color: var(--ink);
 }
 
 .status-pill.is-warn {
@@ -741,13 +748,15 @@ code {
   color: var(--brand-dark);
   font-weight: 900;
   text-decoration: none;
-  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  letter-spacing: 0;
+  transition: transform var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard);
 }
 
 .workflow-step:hover,
 .workflow-step:focus-visible {
   background: var(--brand-softer);
   outline: none;
+  transform: translateY(-2px);
 }
 
 .workflow-step.is-active {
@@ -919,9 +928,7 @@ textarea:focus {
   place-items: center;
   overflow: hidden;
   border-radius: 22px;
-  background:
-    linear-gradient(135deg, rgba(82, 0, 255, 0.12), rgba(3, 221, 239, 0.14)),
-    #ffffff;
+  background: var(--brand-soft);
 }
 
 .control-stack {
@@ -961,7 +968,7 @@ textarea:focus {
   overflow: hidden;
   height: 12px;
   border-radius: 999px;
-  background: #ece6f8;
+  background: var(--line);
 }
 
 .confidence-track span,
@@ -970,8 +977,8 @@ textarea:focus {
   width: 0%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand), var(--accent-teal));
-  transition: width 180ms ease;
+  background: var(--brand);
+  transition: width var(--motion-fast) var(--ease-standard);
 }
 
 .serial-panel {
@@ -1508,5 +1515,79 @@ tbody tr:last-child td {
   .section {
     box-shadow: none;
     break-inside: avoid;
+  }
+}
+
+/* Smart Plants design-system alignment for the public landing and platform UI. */
+h1,
+h2,
+h3,
+h4,
+label,
+button,
+th,
+td,
+.btn,
+.menu-button,
+.primary-button,
+.secondary-button,
+.ghost-button,
+.file-button,
+.status-pill,
+.section-kicker,
+.eyebrow {
+  letter-spacing: 0;
+}
+
+.step-card,
+.feature-card,
+.audience-card,
+.concept-panel,
+.mapping-panel,
+.control-panel,
+.confidence-panel,
+.diagnostics-panel,
+.metric-card,
+.workflow-section,
+.report-modal {
+  border-radius: 8px;
+}
+
+.step-card,
+.feature-card,
+.audience-card,
+.concept-panel,
+.mapping-panel,
+.control-panel,
+.confidence-panel,
+.diagnostics-panel,
+.metric-card,
+.workflow-section,
+.report-modal,
+.table-wrap {
+  transition: transform var(--motion-medium) var(--ease-out), box-shadow var(--motion-medium) var(--ease-out), border-color var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard);
+}
+
+.step-card:hover,
+.feature-card:hover,
+.audience-card:hover,
+.concept-panel:hover,
+.mapping-panel:hover,
+.control-panel:hover,
+.confidence-panel:hover,
+.diagnostics-panel:hover,
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -25,9 +25,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid rgba(82, 0, 255, 0.22);
+  border: 1px solid var(--line, #E2DDEA);
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface, #FFFFFF);
   padding: 4px;
   box-shadow: 0 10px 24px rgba(82, 0, 255, 0.08);
 }
@@ -38,15 +38,15 @@
   border-radius: 999px;
   padding: 8px 10px;
   background: transparent;
-  color: var(--muted, var(--delphi-muted, #625b70));
+  color: var(--muted, #625B70);
   font: inherit;
   font-size: 0.86rem;
   font-weight: 900;
   cursor: pointer;
 }
 .language-toggle button.is-active {
-  background: var(--brand, var(--brand-purple, var(--delphi-blue, #5200FF)));
-  color: #fff;
+  background: var(--brand, #5200FF);
+  color: var(--surface, #FFFFFF);
   box-shadow: 0 10px 22px rgba(82, 0, 255, 0.20);
 }
 .language-toggle button:focus-visible {
