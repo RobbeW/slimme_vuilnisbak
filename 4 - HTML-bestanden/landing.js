@@ -1,9 +1,16 @@
 const menuButton = document.getElementById("menuButton");
 const navLinks = document.getElementById("navLinks");
 
+const getMenuLabel = (isOpen) => {
+  const isEnglish = document.documentElement.lang === "en";
+  if (isEnglish) return isOpen ? "Close navigation" : "Open navigation";
+  return isOpen ? "Navigatie sluiten" : "Navigatie openen";
+};
+
 const setMenuState = (isOpen) => {
   navLinks?.classList.toggle("is-open", isOpen);
-  menuButton.setAttribute("aria-expanded", String(isOpen));
+  menuButton?.setAttribute("aria-expanded", String(isOpen));
+  menuButton?.setAttribute("aria-label", getMenuLabel(isOpen));
 };
 
 menuButton?.addEventListener("click", () => {
@@ -21,3 +28,19 @@ document.addEventListener("keydown", (event) => {
     menuButton?.focus();
   }
 });
+
+document.addEventListener("click", (event) => {
+  if (navLinks?.classList.contains("is-open") && !navLinks.contains(event.target) && !menuButton?.contains(event.target)) {
+    setMenuState(false);
+  }
+});
+
+window.addEventListener("resize", () => {
+  if (window.matchMedia("(min-width: 761px)").matches) setMenuState(false);
+});
+
+document.addEventListener("slimmevuilnisbak:languagechange", () => {
+  setMenuState(navLinks?.classList.contains("is-open") ?? false);
+});
+
+setMenuState(false);
