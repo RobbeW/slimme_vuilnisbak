@@ -1601,3 +1601,51 @@ td,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Keep the landing header compact on small screens, like Smart Plants. */
+@media (max-width: 760px) {
+  .landing-page .nav {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .landing-page .brand-link {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .landing-page .nav-actions {
+    flex: 0 1 auto;
+    min-width: 0;
+    justify-content: flex-end;
+  }
+
+  .landing-page .nav-links {
+    order: 3;
+    width: 100%;
+    padding-top: 0.3rem;
+  }
+
+  .landing-page .nav-links.is-open {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .landing-page .nav-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .landing-page .nav-actions .btn,
+  .landing-page .nav-actions .menu-button {
+    width: auto;
+    min-width: 7.5rem;
+    flex: 1 1 7.5rem;
+    white-space: normal;
+    text-align: center;
+  }
+}
