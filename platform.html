@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js" defer></script>
   <script src="4%20-%20HTML-bestanden/p5.min.js"></script>
   <script>window.SV_ASSET_BASE = "4%20-%20HTML-bestanden/";</script>
-  <script src="4%20-%20HTML-bestanden/sketch.js?v=20260516-camera-fix" defer></script>
+  <script src="4%20-%20HTML-bestanden/sketch.js?v=20261114-model-choice" defer></script>
   <style id="platform-language-toggle-styles">
 .language-toggle {
   display: inline-flex;
@@ -398,39 +398,89 @@ body > header .tab.active {
         <p class="eyebrow">Model kiezen</p>
         <h2>Gebruik het standaardmodel of laad je eigen model</h2>
       </div>
-      <div class="model-upload-grid">
-        <article class="concept-panel">
-          <h3>Standaardmodel</h3>
-          <p>
-            De pagina start met het model in de map <code>image_model</code>. Dat is handig om het platform snel te testen.
-          </p>
-          <p>
-            Werk je met een eigen Teachable Machine model? Exporteer als TensorFlow.js en laad hier de drie bestanden.
-          </p>
-        </article>
-        <form id="custom-session-form" class="model-upload-panel">
-          <label>
-            Projecttitel
-            <input type="text" id="custom-title" placeholder="Bijv. Slimme koelkast" />
-          </label>
-          <label>
-            Klassen, een per regel
-            <textarea id="custom-classes" rows="4" placeholder="BIO&#10;PLASTIC&#10;METAAL&#10;PAPIER"></textarea>
-          </label>
-          <label>
-            Modelbestanden
-            <input type="file" id="custom-tm-files" multiple accept=".json,.bin" />
-          </label>
-          <small>Selecteer <code>model.json</code>, <code>metadata.json</code> en <code>weights.bin</code>.</small>
-          <p id="custom-model-status" class="model-upload-status" aria-live="polite">
-            Standaardmodel wordt gebruikt.
-          </p>
-          <div class="toolbar">
-            <button id="btn-cancel-custom-session" class="secondary-button" type="reset">Maak leeg</button>
-            <button class="primary-button" type="submit">Laad model</button>
-          </div>
-        </form>
+      <fieldset class="model-choice">
+        <legend class="visually-hidden">Welk model wil je gebruiken?</legend>
+        <label class="model-choice-card">
+          <input type="radio" name="model-source" value="default" checked />
+          <span class="model-choice-mark" aria-hidden="true"></span>
+          <span class="model-choice-body">
+            <strong>Standaardmodel</strong>
+            <span>Klaar om meteen te testen met afval.</span>
+          </span>
+        </label>
+        <label class="model-choice-card">
+          <input type="radio" name="model-source" value="custom" />
+          <span class="model-choice-mark" aria-hidden="true"></span>
+          <span class="model-choice-body">
+            <strong>Eigen model</strong>
+            <span>Laad een model dat je zelf trainde in Teachable Machine.</span>
+          </span>
+        </label>
+      </fieldset>
+
+      <p id="custom-model-status" class="model-upload-status" aria-live="polite">Standaardmodel wordt geladen...</p>
+
+      <div id="default-model-panel" class="model-upload-panel" data-model-panel="default">
+        <h3>Standaardmodel</h3>
+        <p>
+          Dit model staat in de map <code>image_model</code> en herkent deze klassen:
+        </p>
+        <ul id="default-model-classes" class="class-chips">
+          <li>BIO</li><li>PLASTIC</li><li>METAAL</li><li>PAPIER</li><li>MENS</li>
+        </ul>
+        <div class="toolbar">
+          <button id="btn-use-default-model" class="primary-button" type="button" disabled>Standaardmodel is actief</button>
+        </div>
       </div>
+
+      <form id="custom-session-form" class="model-upload-panel" data-model-panel="custom" hidden novalidate>
+        <div class="model-step">
+          <span class="model-step-number" aria-hidden="true">1</span>
+          <div class="model-step-body">
+            <h3>Kies je modelbestanden</h3>
+            <p class="model-step-help">
+              In Teachable Machine: <em>Model exporteren</em> → <em>TensorFlow.js</em> → <em>Downloaden</em>. Pak het zip-bestand uit en kies de drie bestanden samen.
+            </p>
+            <label id="custom-dropzone" class="file-dropzone" for="custom-tm-files">
+              <input type="file" id="custom-tm-files" multiple accept=".json,.bin" />
+              <strong>Klik om bestanden te kiezen</strong>
+              <span>of sleep ze hierheen</span>
+            </label>
+            <ul class="file-checklist" aria-live="polite">
+              <li data-required-file="model"><code>model.json</code> <span class="file-state">ontbreekt</span></li>
+              <li data-required-file="metadata"><code>metadata.json</code> <span class="file-state">ontbreekt</span></li>
+              <li data-required-file="weights"><code>weights.bin</code> <span class="file-state">ontbreekt</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="model-step">
+          <span class="model-step-number" aria-hidden="true">2</span>
+          <div class="model-step-body">
+            <h3>Controleer je klassen</h3>
+            <p id="custom-classes-hint" class="model-step-help">
+              De klassen worden automatisch ingevuld uit metadata.json.
+            </p>
+            <label class="visually-hidden" for="custom-classes">Klassen, een per regel</label>
+            <textarea id="custom-classes" rows="5" placeholder="Wordt automatisch ingevuld"></textarea>
+            <small>Je mag de namen aanpassen. Houd hetzelfde aantal en dezelfde volgorde.</small>
+          </div>
+        </div>
+
+        <div class="model-step">
+          <span class="model-step-number" aria-hidden="true">3</span>
+          <div class="model-step-body">
+            <h3>Geef je project een naam <span class="optional-tag">optioneel</span></h3>
+            <label class="visually-hidden" for="custom-title">Projecttitel</label>
+            <input type="text" id="custom-title" placeholder="Bijv. Slimme koelkast" />
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button id="btn-cancel-custom-session" class="secondary-button" type="reset">Maak leeg</button>
+          <button id="btn-load-custom-model" class="primary-button" type="submit" disabled>Laad eigen model</button>
+        </div>
+      </form>
     </section>
 
     <section id="test" class="workflow-section">
@@ -814,9 +864,52 @@ body > header .tab.active {
   "Bijv. blikje, banaanschil, papiertje": "E.g. can, banana peel, piece of paper",
   "Ik verwacht deze klasse omdat ...": "I expect this class because ...",
   "Het model herkende ... omdat ...": "The model recognised ... because ...",
+  "Welk model wil je gebruiken?": "Which model do you want to use?",
+  "Eigen model": "Own model",
+  "Klaar om meteen te testen met afval.": "Ready to test with waste right away.",
+  "Laad een model dat je zelf trainde in Teachable Machine.": "Load a model you trained yourself in Teachable Machine.",
+  "Dit model staat in de map": "This model is in the folder",
+  "en herkent deze klassen:": "and recognises these classes:",
+  "Standaardmodel is actief": "Default model is active",
+  "Gebruik standaardmodel": "Use default model",
+  "Kies je modelbestanden": "Choose your model files",
+  "In Teachable Machine:": "In Teachable Machine:",
+  "Model exporteren": "Export Model",
+  "Downloaden": "Download",
+  ". Pak het zip-bestand uit en kies de drie bestanden samen.": ". Unzip the file and select all three files together.",
+  "Klik om bestanden te kiezen": "Click to choose files",
+  "of sleep ze hierheen": "or drag them here",
+  "ontbreekt": "missing",
+  "gevonden": "found",
+  "ongeldig": "invalid",
+  "Controleer je klassen": "Check your classes",
+  "De klassen worden automatisch ingevuld uit metadata.json.": "The classes are filled in automatically from metadata.json.",
+  "Dit metadata.json-bestand bevat geen klassen. Kies het bestand uit je Teachable Machine-export.": "This metadata.json file contains no classes. Choose the file from your Teachable Machine export.",
+  "Je mag de namen aanpassen. Houd hetzelfde aantal en dezelfde volgorde.": "You may rename them. Keep the same number and order.",
+  "Geef je project een naam": "Name your project",
+  "optioneel": "optional",
+  "Laad eigen model": "Load own model",
+  "Standaardmodel wordt geladen...": "Loading default model...",
+  "Standaardmodel actief. Je kan nu testen.": "Default model active. You can start testing.",
+  "Eigen model wordt geladen...": "Loading your model...",
+  "Eigen model actief. Je kan nu testen.": "Your model is active. You can start testing.",
+  "Selecteer model.json, metadata.json en weights.bin uit dezelfde export.": "Select model.json, metadata.json and weights.bin from the same export.",
+  "Het model kon niet geladen worden. Controleer of de drie bestanden uit dezelfde export komen.": "The model could not be loaded. Check that the three files come from the same export.",
+  "Het standaardmodel kon niet geladen worden. Open de pagina via een webserver (bv. GitHub Pages).": "The default model could not be loaded. Open the page via a web server (e.g. GitHub Pages).",
+  "De Teachable Machine-bibliotheek kon niet geladen worden. Controleer je internetverbinding.": "The Teachable Machine library could not be loaded. Check your internet connection.",
+  "Kies een klasse": "Choose a class",
+  "Wordt automatisch ingevuld": "Filled in automatically",
   "Welke foto's zou je toevoegen om het model beter te maken?": "Which photos would you add to improve the model?"
 };
   const PATTERNS = [
+  {
+    "pattern": "^(\\d+) klassen gevonden in metadata\\.json\\.$",
+    "replacement": "$1 classes found in metadata.json."
+  },
+  {
+    "pattern": "^Je model heeft (\\d+) klassen, maar je vulde er (\\d+) in\\.$",
+    "replacement": "Your model has $1 classes, but you entered $2."
+  },
   {
     "pattern": "^Voortgang: (.+)$",
     "replacement": "Progress: $1"

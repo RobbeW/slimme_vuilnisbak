@@ -28,6 +28,11 @@ let voteBuffer = [];
 let lastSentCode = null;
 let lastSentTs = 0;
 let labels = ["BIO", "PLASTIC", "METAAL", "PAPIER", "MENS"];
+let modelClassLabels = null; // class names exactly as the loaded model reports them
+let defaultLabels = null;
+let activeModelSource = "default";
+let customFileSet = { model: null, metadata: null, weights: null, metadataLabels: null };
+let classesAutoFilled = true;
 let labelToCode = {};
 let latestPrediction = null;
 let observationLog = [];
@@ -70,6 +75,14 @@ function cacheElements() {
     customClasses: document.getElementById("custom-classes"),
     customFiles: document.getElementById("custom-tm-files"),
     customModelStatus: document.getElementById("custom-model-status"),
+    customDropzone: document.getElementById("custom-dropzone"),
+    customClassesHint: document.getElementById("custom-classes-hint"),
+    customLoad: document.getElementById("btn-load-custom-model"),
+    useDefaultModel: document.getElementById("btn-use-default-model"),
+    defaultModelClasses: document.getElementById("default-model-classes"),
+    modelSourceRadios: [...document.querySelectorAll('input[name="model-source"]')],
+    modelPanels: [...document.querySelectorAll("[data-model-panel]")],
+    fileChecklist: [...document.querySelectorAll("[data-required-file]")],
     report: document.getElementById("report-modal"),
     reportOpen: document.getElementById("btn-report"),
     reportCancel: document.getElementById("btn-cancel-report"),
@@ -156,7 +169,7 @@ function bindUi() {
   els.connect?.addEventListener("click", connectSerial);
   els.disconnect?.addEventListener("click", disconnectSerial);
   els.resetMapping?.addEventListener("click", async () => {
-    localStorage.removeItem(MAPPING_STORAGE_KEY);
+    storageRemove(MAPPING_STORAGE_KEY);
     await initMapping(true);
   });
   els.expectedClass?.addEventListener("change", updateMetrics);
@@ -165,6 +178,17 @@ function bindUi() {
   els.helpClose?.addEventListener("click", () => closeOverlay(els.help));
 
   els.customForm?.addEventListener("submit", handleCustomModelSubmit);
+  els.customForm?.addEventListener("reset", () => window.setTimeout(resetCustomForm, 0));
+  els.customFiles?.addEventListener("change", () => inspectCustomFiles(els.customFiles.files));
+  els.customClasses?.addEventListener("input", () => {
+    classesAutoFilled = false;
+    updateCustomFormState();
+  });
+  els.useDefaultModel?.addEventListener("click", switchToDefaultModel);
+  els.modelSourceRadios.forEach((radio) => {
+    radio.addEventListener("change", () => radio.checked && showModelPanel(radio.value));
+  });
+  bindDropzone();
 
   els.reportOpen?.addEventListener("click", () => openOverlay(els.report));
   els.reportCancel?.addEventListener("click", () => closeOverlay(els.report));
@@ -408,6 +432,8 @@ async function initDefaultModel() {
 
   if (typeof tmImage === "undefined") {
     console.warn("Teachable Machine library is niet beschikbaar.");
+    setModelStatus("De Teachable Machine-bibliotheek kon niet geladen worden. Controleer je internetverbinding.", "error");
+    syncModelChoiceUi();
     return;
   }
 
@@ -415,18 +441,22 @@ async function initDefaultModel() {
     const metaLabels = await loadModelLabelsFromUrl(META_URL);
     if (metaLabels?.length) {
       labels = metaLabels;
-      await initMapping(false);
+      defaultLabels = metaLabels;
+      renderDefaultClassChips();
     }
+    await initMapping(false);
     tmModel = await tmImage.load(MODEL_URL, META_URL);
+    modelClassLabels = getModelClassLabels(tmModel) || labels.slice();
+    activeModelSource = "default";
     modelReady = true;
     renderConfidenceBars([]);
-    if (els.customModelStatus) {
-      els.customModelStatus.textContent = "Standaardmodel geladen.";
-    }
+    setModelStatus("Standaardmodel actief. Je kan nu testen.", "ok");
   } catch (error) {
     console.warn("Model laden mislukt:", error);
-    modelReady = false;
+    modelReady = !!tmModel;
+    setModelStatus("Het standaardmodel kon niet geladen worden. Open de pagina via een webserver (bv. GitHub Pages).", "error");
   }
+  syncModelChoiceUi();
 
   updateDiagnostics();
 }
@@ -444,14 +474,19 @@ async function loadModelLabelsFromUrl(url) {
 
 async function initMapping(forceFresh = false) {
   if (!forceFresh) {
-    const saved = localStorage.getItem(MAPPING_STORAGE_KEY);
+    const saved = storageGet(MAPPING_STORAGE_KEY);
     if (saved) {
       try {
-        labelToCode = JSON.parse(saved);
-        renderMappingTable();
-        return;
+        const parsed = JSON.parse(saved);
+        const matchesLabels = parsed && labels.every((item) => Object.prototype.hasOwnProperty.call(parsed, canonical(item)));
+        if (matchesLabels) {
+          labelToCode = parsed;
+          renderMappingTable();
+          renderExpectedClassOptions();
+          return;
+        }
       } catch {
-        localStorage.removeItem(MAPPING_STORAGE_KEY);
+        storageRemove(MAPPING_STORAGE_KEY);
       }
     }
   }
@@ -463,6 +498,7 @@ async function initMapping(forceFresh = false) {
   });
   saveMapping();
   renderMappingTable();
+  renderExpectedClassOptions();
 }
 
 function canonical(value) {
@@ -494,8 +530,23 @@ function codeForLabel(value) {
   return match ? labelToCode[match] : "0";
 }
 
+// localStorage is shared by every page on the same origin (e.g. all GitHub Pages
+// projects under one account), so it can be full or blocked. Never let storage
+// failures break model loading: the mapping simply stays in memory.
+function storageGet(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function storageRemove(key) {
+  try { localStorage.removeItem(key); } catch {}
+}
+
 function saveMapping() {
-  localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(labelToCode));
+  try {
+    localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(labelToCode));
+  } catch (error) {
+    console.warn("Mapping kon niet bewaard worden (opslag vol of geblokkeerd):", error);
+  }
 }
 
 function renderMappingTable() {
@@ -572,7 +623,7 @@ async function classifyLoop() {
     if (modelReady && cameraReady && cameraVideo && tmModel) {
       try {
         const predictions = await tmModel.predict(cameraVideo);
-        handleResults(predictions);
+        handleResults(applyDisplayLabels(predictions));
       } catch (error) {
         console.warn("Classificatiefout:", error);
         await sleep(250);
@@ -587,7 +638,7 @@ async function classifyUploadedImage() {
   if (!uploadedImageElement || !modelReady || !tmModel || privacyOn) return;
   try {
     const predictions = await tmModel.predict(uploadedImageElement);
-    handleResults(predictions);
+    handleResults(applyDisplayLabels(predictions));
   } catch (error) {
     console.warn("Testbeeld classificeren mislukt:", error);
   }
@@ -764,51 +815,274 @@ async function sendCodeDebounced(code, label, confidence) {
   updateDiagnostics();
 }
 
-async function handleCustomModelSubmit(event) {
-  event.preventDefault();
+// ---------- Model choice: standaardmodel OR eigen Teachable Machine model ----------
 
-  const title = els.customTitle?.value.trim();
-  const customLabels = (els.customClasses?.value || "")
+const FALLBACK_DEFAULT_LABELS = ["BIO", "PLASTIC", "METAAL", "PAPIER", "MENS"];
+const CLASSES_HINT_DEFAULT = "De klassen worden automatisch ingevuld uit metadata.json.";
+
+function getModelClassLabels(model) {
+  try {
+    const list = typeof model?.getClassLabels === "function" ? model.getClassLabels() : null;
+    return Array.isArray(list) && list.length ? list.map(String) : null;
+  } catch {
+    return null;
+  }
+}
+
+// The model always reports its own class names. When the user renamed the
+// classes, translate each prediction to the new name by position.
+function applyDisplayLabels(predictions) {
+  if (!Array.isArray(predictions) || !modelClassLabels || modelClassLabels.length !== labels.length) {
+    return predictions;
+  }
+  return predictions.map((prediction) => {
+    const index = modelClassLabels.indexOf(String(prediction.className));
+    return index >= 0 ? { ...prediction, className: labels[index] } : prediction;
+  });
+}
+
+function setModelStatus(message, tone = "info") {
+  if (!els.customModelStatus) return;
+  els.customModelStatus.textContent = message;
+  els.customModelStatus.dataset.tone = tone;
+}
+
+function showModelPanel(source) {
+  (els.modelPanels || []).forEach((panel) => {
+    panel.hidden = panel.dataset.modelPanel !== source;
+  });
+  (els.modelSourceRadios || []).forEach((radio) => {
+    radio.checked = radio.value === source;
+  });
+}
+
+function syncModelChoiceUi() {
+  if (els.useDefaultModel) {
+    const isActive = activeModelSource === "default" && modelReady;
+    els.useDefaultModel.disabled = isActive;
+    els.useDefaultModel.textContent = isActive ? "Standaardmodel is actief" : "Gebruik standaardmodel";
+  }
+  (els.modelSourceRadios || []).forEach((radio) => {
+    radio.closest(".model-choice-card")?.classList.toggle("is-active-model", modelReady && radio.value === activeModelSource);
+  });
+}
+
+function renderDefaultClassChips() {
+  if (!els.defaultModelClasses) return;
+  els.defaultModelClasses.innerHTML = "";
+  (defaultLabels || FALLBACK_DEFAULT_LABELS).forEach((item) => {
+    const chip = document.createElement("li");
+    chip.textContent = displayLabel(item);
+    els.defaultModelClasses.append(chip);
+  });
+}
+
+function renderExpectedClassOptions() {
+  const select = els.expectedClass;
+  if (!select) return;
+  const previous = select.value;
+  select.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Kies een klasse";
+  select.append(placeholder);
+  labels.forEach((item) => {
+    const option = document.createElement("option");
+    option.value = displayLabel(item);
+    option.textContent = displayLabel(item);
+    select.append(option);
+  });
+  select.value = [...select.options].some((option) => option.value === previous) ? previous : "";
+}
+
+function bindDropzone() {
+  const zone = els.customDropzone;
+  if (!zone) return;
+  ["dragenter", "dragover"].forEach((type) => zone.addEventListener(type, (event) => {
+    event.preventDefault();
+    zone.classList.add("is-dragging");
+  }));
+  ["dragleave", "dragend", "drop"].forEach((type) => zone.addEventListener(type, () => zone.classList.remove("is-dragging")));
+  zone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    const files = event.dataTransfer?.files;
+    if (!files?.length) return;
+    try {
+      els.customFiles.files = files;
+    } catch {}
+    inspectCustomFiles(files);
+  });
+}
+
+async function readJsonFile(file) {
+  try {
+    return JSON.parse(await file.text());
+  } catch {
+    return null;
+  }
+}
+
+// Recognise the three Teachable Machine export files by content, not only by
+// name, so renamed downloads like "model (1).json" still work.
+async function inspectCustomFiles(fileList) {
+  const files = [...(fileList || [])];
+  const found = { model: null, metadata: null, weights: null, metadataLabels: null, metadataInvalid: false };
+
+  for (const file of files) {
+    const name = file.name.toLowerCase();
+    if (name.endsWith(".bin")) {
+      found.weights = found.weights || file;
+      continue;
+    }
+    if (!name.endsWith(".json")) continue;
+
+    const json = await readJsonFile(file);
+    if (json?.modelTopology || json?.weightsManifest) {
+      found.model = found.model || file;
+    } else if (Array.isArray(json?.labels)) {
+      found.metadata = found.metadata || file;
+      found.metadataLabels = json.labels.map(String);
+    } else if (name.includes("metadata")) {
+      found.metadata = found.metadata || file;
+      found.metadataInvalid = true;
+    } else if (name.includes("model")) {
+      found.model = found.model || file;
+    }
+  }
+
+  customFileSet = found;
+
+  if (found.metadataLabels && (classesAutoFilled || !els.customClasses?.value.trim())) {
+    if (els.customClasses) els.customClasses.value = found.metadataLabels.join("\n");
+    classesAutoFilled = true;
+  }
+
+  updateCustomFormState();
+}
+
+function readTypedClasses() {
+  return (els.customClasses?.value || "")
     .split("\n")
     .map((item) => item.trim())
     .filter(Boolean);
-  const files = [...(els.customFiles?.files || [])];
-  const modelFile = files.find((file) => file.name === "model.json" || file.name.endsWith("model.json"));
-  const metadataFile = files.find((file) => file.name === "metadata.json" || file.name.endsWith("metadata.json"));
-  const weightFile = files.find((file) => file.name.endsWith(".bin"));
+}
 
-  if (!modelFile || !metadataFile || !weightFile) {
-    if (els.customModelStatus) {
-      els.customModelStatus.textContent = "Selecteer model.json, metadata.json en weights.bin.";
+function updateCustomFormState() {
+  const { model, metadata, weights, metadataLabels, metadataInvalid } = customFileSet;
+
+  (els.fileChecklist || []).forEach((item) => {
+    const key = item.dataset.requiredFile;
+    const file = customFileSet[key];
+    const invalid = key === "metadata" && metadataInvalid;
+    item.classList.toggle("is-found", !!file && !invalid);
+    item.classList.toggle("is-invalid", invalid);
+    const state = item.querySelector(".file-state");
+    if (state) state.textContent = invalid ? "ongeldig" : file ? "gevonden" : "ontbreekt";
+  });
+
+  const typed = readTypedClasses();
+  const countMismatch = metadataLabels && typed.length && typed.length !== metadataLabels.length;
+  const ready = !!(model && metadata && weights) && !metadataInvalid && !countMismatch;
+
+  if (els.customClassesHint) {
+    let hint = CLASSES_HINT_DEFAULT;
+    let tone = "";
+    if (metadataInvalid) {
+      hint = "Dit metadata.json-bestand bevat geen klassen. Kies het bestand uit je Teachable Machine-export.";
+      tone = "error";
+    } else if (countMismatch) {
+      hint = `Je model heeft ${metadataLabels.length} klassen, maar je vulde er ${typed.length} in.`;
+      tone = "error";
+    } else if (metadataLabels) {
+      hint = `${metadataLabels.length} klassen gevonden in metadata.json.`;
+      tone = "ok";
     }
-    alert("Selecteer model.json, metadata.json en weights.bin.");
+    els.customClassesHint.textContent = hint;
+    els.customClassesHint.dataset.tone = tone;
+  }
+
+  if (els.customLoad) els.customLoad.disabled = !ready;
+  return ready;
+}
+
+function resetCustomForm() {
+  customFileSet = { model: null, metadata: null, weights: null, metadataLabels: null };
+  classesAutoFilled = true;
+  updateCustomFormState();
+}
+
+let defaultAppTitle = null;
+function applyProjectTitle(title) {
+  const heading = document.querySelector(".AIapp h2");
+  if (defaultAppTitle === null) {
+    defaultAppTitle = { page: document.title, heading: heading?.textContent || "" };
+  }
+  if (title) {
+    document.title = `Platform ${title}`;
+    if (heading) heading.textContent = title;
+  } else {
+    document.title = defaultAppTitle.page;
+    if (heading) heading.textContent = defaultAppTitle.heading;
+  }
+}
+
+function disposeModel(model) {
+  try {
+    model?.dispose?.();
+  } catch {}
+}
+
+async function switchToDefaultModel() {
+  const previous = tmModel;
+  setModelStatus("Standaardmodel wordt geladen...", "info");
+  labels = (defaultLabels || FALLBACK_DEFAULT_LABELS).slice();
+  applyProjectTitle("");
+  await initDefaultModel();
+  if (previous && previous !== tmModel) disposeModel(previous);
+}
+
+async function handleCustomModelSubmit(event) {
+  event.preventDefault();
+
+  // Older page versions have no file checklist: inspect the files now.
+  if (!customFileSet.model || !customFileSet.metadata || !customFileSet.weights) {
+    await inspectCustomFiles(els.customFiles?.files);
+  }
+  if (!updateCustomFormState()) {
+    setModelStatus("Selecteer model.json, metadata.json en weights.bin uit dezelfde export.", "error");
     return;
   }
 
-  if (title) {
-    document.title = `Platform ${title}`;
-    document.querySelector(".AIapp h2").textContent = title;
-  }
+  const { model, metadata, weights, metadataLabels } = customFileSet;
+  const typed = readTypedClasses();
+  const title = els.customTitle?.value.trim();
+  const previous = tmModel;
+
+  setModelStatus("Eigen model wordt geladen...", "info");
+  if (els.customLoad) els.customLoad.disabled = true;
+  modelReady = false;
+  updateDiagnostics();
 
   try {
-    modelReady = false;
-    updateDiagnostics();
-    tmModel = await tmImage.loadFromFiles(modelFile, weightFile, metadataFile);
-    labels = customLabels.length ? customLabels : labels;
+    const loaded = await tmImage.loadFromFiles(model, weights, metadata);
+    tmModel = loaded;
+    modelClassLabels = getModelClassLabels(loaded) || metadataLabels || typed;
+    labels = typed.length ? typed : modelClassLabels.slice();
+    activeModelSource = "custom";
     await initMapping(true);
     renderConfidenceBars([]);
     modelReady = true;
-    if (els.customModelStatus) {
-      els.customModelStatus.textContent = "Eigen model geladen. Je kan nu testen.";
-    }
+    applyProjectTitle(title);
+    if (previous && previous !== loaded) disposeModel(previous);
+    setModelStatus("Eigen model actief. Je kan nu testen.", "ok");
   } catch (error) {
     console.warn("Eigen model laden mislukt:", error);
-    if (els.customModelStatus) {
-      els.customModelStatus.textContent = "Het model kon niet geladen worden. Controleer de bestanden.";
-    }
-    alert("Het model kon niet geladen worden. Controleer of de juiste bestanden geselecteerd zijn.");
+    modelReady = !!tmModel; // keep the previous model running
+    setModelStatus("Het model kon niet geladen worden. Controleer of de drie bestanden uit dezelfde export komen.", "error");
   }
 
+  syncModelChoiceUi();
+  updateCustomFormState();
   updateDiagnostics();
 }
 
